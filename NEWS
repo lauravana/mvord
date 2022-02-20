@@ -1,0 +1,92 @@
+This file documents updates and changes in the package mvord
+
+changes in version 1.1.1 (2020-03-16)
+- fixed bug for value0 with cor_ar1
+
+changes in version 1.1.0 (2020-11-17)
+- speed up in PL_fun - minimal changes in the 10+ decimal places for some specific lead to minimal deviations in the optimization results of the general purpose optimizers. In some cases more evaluation steps are needed.
+- implementation of PL_fast
+- fixed bug in vector constraints for coef
+
+changes in version 1.0.2 (2020-08-31)
+- fixed bug in prediction with categorial variables with newdata
+
+changes in version 1.0.1 (2020-05-27)
+- changes in checks due to new treatment when combining ordered factors in R 4.0.1.
+
+changes in version 1.0.0 (2020-04-17)
+- publication in Journal of Statistical Software
+
+changes in version 0.3.6 (2019-09-22)
+- fixed bug in thresholds checks for two binary responses
+
+changes in version 0.3.5 (2019-03-06)
+- added suppressWarnings(RNGversion("3.5.0")) in tests
+
+changes in version 0.3.4 (2019-02-20)
+- two additional arguments have been added to the error structures: value = numeric(0)
+  (for initial values) and fixed = FALSE (for allowing the user to fix the parameters of the error structure to the values specified in argument
+  value)
+- efficiency improvements by using rep.int, paste0, seq_len, seq_along where possible
+
+changes in version 0.3.3 (2018-10-30)
+- fixed bug standard errors with threshold.constraints
+
+changes in version 0.3.2 (2018-10-03)
+- function polycor() for polychoric correlations is now available
+- added packages minqa, BB, ucminf and dfoptim as dependencies
+
+changes in version 0.3.1 (2018-06-12)
+- out-of-sample predictions are now available
+- additional examples are now available in an additional vignette
+
+changes in version 0.3.0 (2018-05-03)
+- new model design with multiple measurement objects MMO and MMO2 (former mvord2())
+- removed function mvord2()
+- removed argument scale (covariates are scaled internally for optimizer)
+- fixed bug in standard errors with binary outcomes
+- removed argument response.names (if specific ordering is desired this can be performed by an ordered factor for the multiple measurement index)
+- additional input types are now applicable for ordinal response variables
+- fixed bug trace
+- control = mvord.control()
+- additional checks
+- new function name marginal_predict() (instead of marginal.predict())
+- new function name joint_probabilities() (instead of get.prob()); type "class" instead of "class.max"
+- new function name error_structure() (instead of get_error_struct())
+
+changes in version 0.2.1 (2017-11-29)
+- adapted predict(), get.prob(), marginal.predict()
+- added contrasts as argument to mvord() and mvord2()
+- fixed bug in VGAM design of coef.constraints
+- changed internal design matrices
+
+changes in version 0.2.0 (2017-11-10)
+- implemented nobs.mvord()
+- implemented vcov.mvord()
+- implemented terms.mvord()
+- implemented model.matrix.mvord()
+- implemented fitted.mvord()
+- implemented logLik.mvord()
+- AIC() and BIC() are now available
+- additional argument scale
+- new (additional) design for coef.constraints in analogy to constraints in VGAM
+- category-specific regression parameters
+- additional argument offset
+- new class "mvlink"
+- implemented coef.constraints()
+- logPL(), claic() and clbic() are not exported anymore. use logLik(), AIC() and BIC() instead.
+- renamed cor_general, cor_ar1, cor_equi, cov_general
+- implemented names_constraints()
+
+
+changes in version 0.1.0 (2017-10-17)
+- changed function name from multord() to mvord()
+- changed function name from multord2() to mvord2()
+- implemented predict function()
+- implemented predict.marginal function()
+- implemented get.prob function()
+- changed link probit to mvprobit()
+- changed link logit to mvlogit(df = 8L); default value of degrees of freedom is 8
+- implemented a more flexible multivariate logistic distribution with logistic marginals and t copula (df are settable)
+- additional argument PL.lag
+

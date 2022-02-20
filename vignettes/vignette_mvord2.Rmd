@@ -1,0 +1,504 @@
+---
+title: "mvord: Additional examples"
+author: "Rainer Hirk, Kurt Hornik and Laura Vana"
+date: "`r Sys.Date()`"
+output:
+  html_vignette:
+    toc: TRUE
+bibliography: mvord.bib
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{mvord: Additional examples}
+  %\VignetteDepends{mvord}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load package **mvord**
+```{r message=FALSE}
+library(mvord)
+```
+
+Load data set
+```{r}
+data("data_cr")
+str(data_cr, vec.len = 3)
+head(data_cr, n = 3)
+```
+
+## Example 1 - A simple example with 2 raters
+We introduce a simple example with 2 raters (`rater1` and `rater2`) rating a set of firms. The data set `data_cr` has a wide format and hence, we apply the multiple measurement object `MMO2` on the left-hand side of the formula object. The firm-level covariates `LR`, `LEV`, `PR`, `RSIZE`, `BETA`
+are passed on the right-hand side of the formula. The thresholds are set equal by the argument `thresholds.constraints`.
+```{r eval = FALSE}
+res_cor_probit_2raters <- mvord(formula = MMO2(rater1, rater2) ~ 0 + LR + LEV + PR + RSIZE + BETA,
+                               threshold.constraints = c(1, 1),
+                               data = data_cr)
+```
+
+```{r echo = FALSE, results = 'hide', eval = TRUE}
+cache <- TRUE
+FILE <- "res_cor_probit_2raters.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+res_cor_probit_2raters <- mvord(formula = MMO2(rater1, rater2) ~ 0 + LR + LEV + PR + RSIZE + BETA,
+                               threshold.constraints = c(1, 1),
+                               data = data_cr)
+res_cor_probit_2raters <- mvord:::reduce_size.mvord(res_cor_probit_2raters)
+  save(res_cor_probit_2raters, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+}
+```
+The results are displayed by:
+```{r}
+summary(res_cor_probit_2raters)
+```
+
+The coefficients can be extracted by:
+```{r}
+coef(res_cor_probit_2raters)
+```
+
+
+## Example 2 - A simple example with 3 raters
+A simple example with 3 raters (`rater1`, `rater2` and `rater3`) is presented. The regression coefficients are set equal by the argument `coef.constraints`.
+```{r eval = FALSE}
+res_cor_probit_3raters <- mvord(formula = MMO2(rater1, rater2, rater 3) ~ 0 + LR + LEV + PR + RSIZE + BETA,
+                               coef.constraints = c(1, 1, 1),
+                               data = data_cr,
+                               link = mvlogit())
+```
+
+```{r echo = FALSE, results = 'hide', eval = TRUE}
+cache <- TRUE
+FILE <- "res_cor_probit_3raters.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+res_cor_probit_3raters <- mvord(formula = MMO2(rater1, rater2, rater3) ~ 0 + LR + LEV + PR + RSIZE + BETA,
+                               coef.constraints = c(1, 1, 1),
+                               data = data_cr,
+                               link = mvlogit())
+res_cor_probit_3raters <- mvord:::reduce_size.mvord(res_cor_probit_3raters)
+  save(res_cor_probit_3raters, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+}
+```
+The results are displayed by:
+```{r}
+summary(res_cor_probit_3raters)
+```
+The threshold parameters are presented by:
+```{r}
+thresholds(res_cor_probit_3raters)
+```
+
+## Example 3a - A model of firm ratings assigned by multiple raters and an investment-speculative grade indicator
+This example presents a four dimensional ordinal regression model with probit link and a general correlation error structure `cor_general(~ 1)`. The fourth rater only rates the firms on a binary scale: investment grade vs. speculative grade.  
+```{r eval = FALSE}
+res_cor_probit_simple <- mvord(formula = MMO2(rater1, rater2, rater3, rater4) ~ 0 + LR + LEV + PR + RSIZE + BETA, data = data_cr)
+```
+
+```{r echo = FALSE, results = 'hide', eval = TRUE}
+cache <- TRUE
+FILE <- "res_cor_probit_simple.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+res_cor_probit_simple <- mvord(
+    formula =
+    MMO2(rater1, rater2, rater3, rater4) ~ 0 + LR + LEV + PR + RSIZE + BETA, data = data_cr)
+res_cor_probit_simple <- mvord:::reduce_size.mvord(res_cor_probit_simple)
+  save(res_cor_probit_simple, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+}
+```
+
+The results are displayed by:
+```{r}
+summary(res_cor_probit_simple)
+```
+The threshold coefficients can be extracted by:
+```{r}
+thresholds(res_cor_probit_simple)
+```
+The regression coefficients are obtained by:
+```{r}
+coef(res_cor_probit_simple)
+```
+
+The error structure for firm with `firm_id = 11` is displayed by:
+```{r}
+error_structure(res_cor_probit_simple)[[11]]
+```
+
+
+## Example 3b - A more elaborate model of ratings assigned by multiple raters
+In this example, we extend the setting of the above example by imposing constraints on the
+regression as well as on the threshold parameters and changing the link function to the
+multivariate logit link.
+```{r eval = FALSE}
+res_cor_logit <- mvord(formula = MMO2(rater1, rater2, rater3, rater4) ~
+    0 + LR + LEV + PR + RSIZE + BETA, data = data_cr, link = mvlogit(),
+    coef.constraints = cbind(LR = c(1, 1, 1, 1), 
+                             LEV = c(1, 2, 3, 4),
+                             PR = c(1, 1, 1, 1), 
+                             RSIZE = c(1, 1, 1, 2), 
+                             BETA = c(1, 1, 2, 3)),
+    threshold.constraints = c(1, 1, 2, 3))
+```
+
+```{r echo = FALSE, results = 'hide', eval = TRUE}
+FILE <- "res_cor_logit.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+res_cor_logit <- mvord(formula = MMO2(rater1, rater2, rater3, rater4) ~
+    0 + LR + LEV + PR + RSIZE + BETA, data = data_cr, link = mvlogit(),
+  coef.constraints = cbind(
+    c(1,1,1,1),
+    c(1,2,3,4),
+    c(1,1,1,1),
+    c(1,1,1,2),
+    c(1,1,2,3)),
+    threshold.constraints = c(1, 1, 2, 3))
+#res_cor_logit <- mvord:::reduce_size2.mvord(res_cor_logit)
+  save(res_cor_logit, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+
+}
+```
+The results are displayed by:
+```{r}
+summary(res_cor_logit)
+```
+The constraints are displayed by:
+```{r}
+constraints(res_cor_logit)
+```
+Note that the composite likelihood information criteria can be used for model comparison. For
+objects of class `mvord` the composite likelihood AIC and BIC are computed by `AIC()` and `BIC()`, respectively.
+The model fits of examples one and two are compared by means of BIC and AIC. We observe that the model of Example 3b has a lower BIC and AIC indicating a better model fit:
+```{r}
+BIC(res_cor_probit_simple, res_cor_logit)
+```
+
+```{r}
+AIC(res_cor_probit_simple)
+AIC(res_cor_logit)
+```
+
+The value of the pairwise log-likelihood of the two models can be extracted by:
+```{r}
+logLik(res_cor_probit_simple)
+logLik(res_cor_logit)
+```
+
+Marginal predictions are obtained by:
+```{r}
+mp <- marginal_predict(res_cor_logit, type = "class")
+```
+```{r}
+table(data_cr$rater1, mp$rater1)
+table(data_cr$rater2, mp$rater2)
+table(data_cr$rater3, mp$rater3)
+table(data_cr$rater4, mp$rater4)
+```
+
+Joint predictions are obtained by:
+```{r eval = FALSE}
+jp <- joint_probabilities(res_cor_logit, 
+                          response.cat = data_cr[,1:4],  
+                          type = "prob")
+```
+```{r echo = FALSE, results = 'hide', eval = TRUE}
+FILE <- "jp.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+jp <- predict(res_cor_logit, type = "class")
+  save(jp, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+}
+```
+
+```{r}
+table(data_cr$rater1, jp$rater1)
+table(data_cr$rater2, jp$rater2)
+table(data_cr$rater3, jp$rater3)
+table(data_cr$rater4, jp$rater4)
+```
+
+## Example 4 - A longitudinal model
+In this example, we present a longitudinal multivariate ordinal probit regression model
+with a covariate dependent AR(1) error structure using the data set data_cr_panel:
+```{r}
+data("data_cr_panel", package = "mvord")
+str(data_cr_panel, vec.len = 3)
+head(data_cr_panel, n = 3)
+```
+
+
+```{r eval=F}
+res_AR1_probit <- mvord(formula = MMO(rating, firm_id, year) ~ LR + LEV +
+  PR + RSIZE + BETA, 
+  error.structure = cor_ar1(~ BSEC), link = mvprobit(),
+  data = data_cr_panel, 
+  coef.constraints = c(rep(1, 4), rep(2, 4)),
+  threshold.constraints = rep(1, 8), 
+  threshold.values = rep(list(c(0, NA, NA, NA)),8),
+  control = mvord.control(solver = "BFGS"))
+```
+
+
+```{r echo = FALSE, results = 'hide', eval = TRUE}
+FILE <- "res_AR1_probit.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+res_AR1_probit <- mvord(
+  formula = MMO(rating, firm_id, year) ~ LR + LEV + PR + RSIZE +  BETA,
+  data = data_cr_panel,
+  error.structure = cor_ar1(~ BSEC),
+  coef.constraints = c(rep(1,4), rep(2,4)),
+  threshold.constraints = c(rep(1,8)),
+  threshold.values = rep(list(c(0,NA,NA,NA)),8),
+  link = mvprobit(),
+  control = mvord.control(solver = "BFGS",  
+                          solver.optimx.control = list(trace = TRUE)))
+   res_AR1_probit <- mvord:::reduce_size.mvord(res_AR1_probit)
+  save(res_AR1_probit, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+}
+```
+The results of the model can be presented by
+```{r}
+summary(res_AR1_probit, short = TRUE, call = FALSE)
+```
+The default error structure output for AR(1) models:
+```{r}
+error_structure(res_AR1_probit)
+```
+Correlation parameters $\rho_i$ for each firm are obtained by choosing `type = "corr"` in `error_structure()`:
+```{r}
+head(error_structure(res_AR1_probit, type = "corr"), n = 3)
+```
+Correlation matrices for each specific firm are obtained by choosing `type = "sigmas"`:
+```{r}
+head(error_structure(res_AR1_probit, type = "sigmas"), n = 1)
+```
+
+
+## Example 5 - Self-reported health status
+In this example we analyze longitudinal data on self-reported health status measured on a five point ordinal scale 
+(5 = *poor*, 4 =
+*fair*, 3 = *good*, 2 = *very good* and 1 =
+*excellent*) derived from the Health and Retirement Study
+conducted by the University of Michigan which is available in the
+**LMest** package:
+```{r include=FALSE}
+load("data_SRHS_long.rda")
+```
+```{r eval=FALSE, include=TRUE}
+data(data_SRHS_long, package = "LMest")
+```
+```{r}
+str(data_SRHS_long)
+```
+
+The dataset contains a self-reported health status `srhs`
+together with covariates such as ethnicity (`race` coded as 1 =
+*white*, 2 = *black*, 3 = *others*), `gender`
+(coded as 1 = *male*, 2 = *female*), `education` level
+(coded as 1 = *high school*, 2 = *general educational
+  diploma*, 3 = *high school graduate*, 4 = *some college*,
+5 = *college and above*) and `age` for
+`r length(unique(data_SRHS_long[,"id"]))` subjects on 8 different
+(approximately equally spaced) time occasions.
+
+We add a time index to the data set:
+```{r}
+data_SRHS_long$time <- rep(1:8, length(unique(data_SRHS_long$id)))
+```
+
+We estimate a multivariate ordinal logit model similar to the one of the models employed by @Bartolucci14, where for every subject in the sample the errors follow an $AR(1)$ process. Moreover, the threshold and regression coefficients are equal across all years. In order to reduce the computational burden we only consider pairs of observations not more than two time points appart by setting `PL.lag = 2`.
+```{r eval=FALSE, include=TRUE}
+res_srhs <- mvord(formula = MMO(srhs, id, time) ~ 0 + factor(gender) +
+	factor(race) + factor(education) + age, 
+	data = data_SRHS_long,
+	threshold.constraints = rep(1, 8), 
+	coef.constraints = rep(1, 8),
+	error.structure = cor_ar1(~ 1), link = mvlogit(), 
+	PL.lag = 2)
+```
+
+```{r include=FALSE}
+FILE <- "res_srhs.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+    res_srhs <- mvord(formula = MMO(srhs, id, time) ~ 0 +  factor(gender) +
+   	    factor(race) + factor(education) + age,
+                  data = data_SRHS_long,
+                  link = mvlogit(),
+                  threshold.constraints = rep(1, 8),
+                  coef.constraints = rep(1, 8),
+                  error.structure = cor_ar1(~1), PL.lag = 2)
+   res_srhs <- mvord:::reduce_size.mvord(res_srhs)
+    save(res_srhs, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+}
+```
+(runtime `r round(res_srhs$rho$runtime[[1]]/60,0)` minutes).
+
+The persistence in the reported health status is high. The correlation
+parameter in the `cor_ar1` error structure is
+```{r}
+unique(error_structure(res_srhs, type = "corr"))
+```
+The estimated parameters are shown by the function `summary()`:
+```{r}
+summary(res_srhs, call = FALSE)
+```
+In the logit model the coefficients can be interpreted in terms of
+log-odds ratios. The results suggest that being non-white increases
+the chances of reporting a worse health status while higher people
+with education levels tend to report better health. Moreover, every
+additional year increases the odds of reporting a worse health status by 1.64% ($exp(0.0162628)=1.016396$).
+
+
+## Example 6 - Multirater agreement data
+The **mvord** package can also be employed to measure agreement
+among several rating sources either with or without additional
+relevant covariate information.
+
+We use the multirater agreement data from Chapter 5 in
+@johnson1999ordinal.  These data consist of grades assigned to
+198 essays by 5 experts, each of whom rated all essays on a 10-point
+scale. A score of 10 indicates an excellent essay. In addition, the
+average word length is also available as an essay characteristic.
+```{r eval=FALSE, include=TRUE}
+N <- "http://www-math.bgsu.edu/~albert/ord_book/Chapter5/essay_data/N.dat"
+X <- "http://www-math.bgsu.edu/~albert/ord_book/Chapter5/essay_data/X.dat"
+y  <- read.delim(url(N), header = F, sep = "")
+wl <- read.delim(url(X), header = F, sep = "")[,2]
+df <- cbind.data.frame(y, wl)
+colnames(df)[1:5] <- paste0("Judge", 1:5)
+save(df, file =  "df.rda")
+```
+```{r include=FALSE}
+load(file =  "df.rda")
+```
+
+The traditional measure of agreement between raters in the social
+sciences is the polychoric correlation.  The polychoric correlation
+can be assessed using the **mvord** package by estimating of a model
+with no covariates and probit link. The correlation parameters of the
+`cor_general` error structure are to be interpretated as the
+measure of agreement.
+```{r}
+head(df)
+```
+The data is in the wide format (each ordinal response is in one
+column) so the `MMO2` object will be used in the `formula`
+object:
+```{r eval=FALSE, include=TRUE}
+res_essay_0 <- mvord(
+  formula = MMO2(Judge1, Judge2, Judge3, Judge4, Judge5) ~ -1,
+  data = df, threshold.constraints = rep(1, 5),
+  coef.constraints = rep(1, 5))
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+FILE <- "res_essay.rda"
+if (cache & file.exists(FILE)) {
+  load(FILE)
+} else {
+  if (cache) {
+    res_essay_wl <- mvord(
+      formula = MMO2(Judge1, Judge2, Judge3, Judge4, Judge5) ~ 0 + wl,
+      data = df, threshold.constraints = rep(1, 5),
+      coef.constraints = rep(1, 5))
+    res_essay_wl <- mvord:::reduce_size2.mvord(res_essay_wl)
+    res_essay_0 <- mvord(
+      formula = MMO2(Judge1, Judge2, Judge3, Judge4, Judge5) ~ -1,
+      data = df, threshold.constraints = rep(1, 5),
+      coef.constraints = rep(1,5))
+    res_essay_0 <- mvord:::reduce_size.mvord(res_essay_0)
+    save(res_essay_0, res_essay_wl, file  = FILE)
+  } else {
+      if(file.exists(FILE)) file.remove(FILE)
+  }
+}
+```
+(runtime `r round(res_essay_0$rho$runtime[[1]])` seconds).
+```{r}
+summary(res_essay_0, call = FALSE)
+```
+The word length can be included as a covariate in the model:
+
+```{r eval=FALSE, include=TRUE}
+res_essay_wl <- mvord(
+  formula = MMO2(Judge1, Judge2, Judge3, Judge4, Judge5) ~ 0 + wl,
+  data = df, threshold.constraints = rep(1, 5),
+  coef.constraints = rep(1, 5))
+```
+(runtime `r round(res_essay_wl$rho$runtime[[1]]/60,0)` minutes).
+```{r}
+summary(res_essay_wl, call = FALSE)
+```
+The probabilities of agreement among all five judges which implied by the model can be computed by the function `joint_probabilities()`:
+```{r}
+agree_prob_list <- lapply(1:10, function(i)
+  joint_probabilities(res_essay_wl, rep(i, 5)))
+agree_prob <- Reduce("+", agree_prob_list)
+summary(agree_prob)
+```
+In order to assess the relationship between the average word length and the agreement probabilities,
+we plot the probabilities of agreement implied by the model against the word length.
+
+```{r fig.align='center', fig.width=6, fig.height=6}
+plot(df$wl, agree_prob,
+  xlab = "word length", ylab = "probability of agreement")
+```
+
+<!-- \begin{center} -->
+<!-- \begin{figure}[!h] -->
+<!-- \caption{Probabilities of agreement between the five raters and word length} -->
+<!-- <<echo=F, fig=T>>= -->
+<!-- plot(df$wl, agree_prob, -->
+<!--   xlab = "word length", ylab = "probability of agreement") -->
+<!-- ``` -->
+<!-- \label{fig:agree} -->
+<!-- \end{figure} -->
+<!-- \end{center} -->
+
+The graphic suggests that the judges tend to agree more on the quality
+of essays with lower average word length than on the essays with
+larger average word length.
+
+
+# References
