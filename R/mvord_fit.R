@@ -81,7 +81,7 @@ mvord.fit <- function(rho){
       rho$start.values$theta[[rho$threshold.constraints[j]]]
       #rho$start.values$theta[[1]]
     })
-    print(rho$start.values$theta)
+    
     gamma.start <- lapply(seq_len(rho$ndim), function(j) {
       theta.start[[j]][is.na(theta.start[[j]])] <-  rho$start.values$theta[[j]]
       theta2gamma(theta.start[[j]])
@@ -91,8 +91,9 @@ mvord.fit <- function(rho){
     start.val.gamma <- unlist(start.val.gamma[!duplicated(rho$threshold.constraints)])
     #transform error.struct parameters
     rho$start <- c(start.val.gamma,
-                   unlist(rho$start.values$beta),#betas
+                   (rho$start.values$beta),#betas
                    start_values(rho$error.structure))
+    print(rho$start)
   }
   #source("mvord/R/utilities.R")
   rho$transf_thresholds <- switch(rho$threshold,
