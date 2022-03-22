@@ -143,7 +143,8 @@ predict.mvord <- function(object, newdata = NULL, type = "prob", subjectID = NUL
 #' The row names of the output correspond to the subjectIDs.
 #' @seealso \code{\link{predict.mvord}}, \code{\link{marginal_predict}}
 #' @export
-joint_probabilities <- function(object, response.cat, newdata = NULL, type = "prob", subjectID = NULL, newoffset = NULL,...) {
+joint_probabilities <- function(object, response.cat, newdata = NULL, 
+                                type = "prob", subjectID = NULL, newoffset = NULL,...) {
   #checks
   if (is.null(object$rho$link$F_multi)) stop("Multivariate probabilities cannot be computed! Try marginal_predict()!")
   # args <- list(...)
@@ -210,6 +211,7 @@ joint_probabilities <- function(object, response.cat, newdata = NULL, type = "pr
   pred.lower[is.na(pred.lower)] <- -object$rho$inf.value
   pred.upper[is.na(pred.upper)] <- object$rho$inf.value
   #################################
+  
   if(type == "cum.prob") pred.lower <- matrix(-object$rho$inf.value,
                                               ncol = ndim, nrow = nrow(pred.upper))
   prob <- object$rho$link$F_multi(U = pred.upper, L = pred.lower,
