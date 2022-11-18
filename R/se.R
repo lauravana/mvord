@@ -28,6 +28,7 @@ PL_se <- function(rho){
       rho$V <- numeric(0)
     } else {
       derivs_for_se <- derivs_ana(rho)
+      rho$g_list <- derivs_for_se$g_list
       rho$V <- rho$n/(rho$n - NCOL(derivs_for_se$V)) * derivs_for_se$V  ## correct for degrees of freedom
       rho$H.inv <- tryCatch(chol2inv(chol(derivs_for_se$H)))
     }
@@ -166,6 +167,22 @@ constraints_theta <- function(rho) {
       Ik <- diag(rho$ntheta[k])
       Ik[, pick.col.theta[[k]], drop = F]
     }))}))
+
+  id_rows <- NULL
+  indtheta <- cumsum(c(0, rho$ntheta[seq_len(rho$ndim)])) + 1
+
+  for (j in unique(rho$threshold.constraints)) {
+    idq <- which(rho$threshold.constraints == j)
+    id_rows <- c(id_rows,
+                 c(sapply(idq, function(i) indtheta[i]: (indtheta[i + 1] - 1))))
+  }
+  C_theta[id_rows, ] <- C_theta
+  # C_theta <- bdiag(lapply(unique(rho$threshold.constraints), function(j) {
+  #   idq <- which(rho$threshold.constraints == j)
+  # do.call("rbind", lapply(idq, function(k){
+  #   Ik <- diag(rho$ntheta[k])
+  #   Ik[, pick.col.theta[[k]], drop = F]
+  # }))}))
   C_theta
 }
 
@@ -238,12 +255,16 @@ derivs_ana <- function(rho){
   npar.cor <-  attr(rho$error.structure, "npar.cor")
   npar.sd  <-  attr(rho$error.structure, "npar.sd")
 
-  par_sigma <-  par[rho$npar.thetas + rho$npar.betas + seq_len(npar.err)]
-  alpha <- par_sigma[seq_len(npar.cor)]
-  gamma <- par_sigma[-seq_len(npar.cor)]
+
+  if (npar.err > 0) {
+    par_sigma <-  par[rho$npar.thetas + rho$npar.betas + seq_len(npar.err)]
+    alpha <- par_sigma[seq_len(npar.cor)]
+    gamma <- par_sigma[-seq_len(npar.cor)]
+  }
+
   S <- attr(rho$error.structure, "covariate")
 
-  sigmas <- rho$build_error_struct(rho$error.structure, par_sigma)
+  sigmas <- rho$build_error_struct(rho$error.structure, par_sigma) ## TODO: not working nicely with specified combis
   ###############################################
   rho$offsetu <- set_offset_threshold_u(rho)
   rho$offsetl <- set_offset_threshold_l(rho)
@@ -298,7 +319,6 @@ derivs_ana <- function(rho){
   ## take each possible pair (k, l)
   ######################################
   r_mat <- sigmas$rVec[, rho$dummy_pl_lag == 1, drop = F]
-
   it0 <- length(g_list)
   #it <- 1
   for (it in (it0 + seq_along(rho$combis))) {
@@ -323,6 +343,7 @@ derivs_ana <- function(rho){
     pr[pr < .Machine$double.eps] <- .Machine$double.eps
     ## vector h_kl will contain the gradient for all d -log p_{kl}/d pars
     dpsi <- dcorr <- dstddev <- NULL
+
     ##################
     ## dpsi
     ##################
@@ -330,6 +351,7 @@ derivs_ana <- function(rho){
       dpsi <- matrix(0,
                      ncol = rho$npar.betas + rho$npar.thetas,
                      nrow = rho$n)
+
       dpsi[indkl, ] <-  d_psi_rect_kl(k, l, indkl, rho, rkl, sd_k, sd_l)
     }
     ##################
@@ -371,11 +393,12 @@ derivs_ana <- function(rho){
   }
   ## matrix containing the gradients for each subject
   Vi <- Reduce("+", g_list)
+
   ## Variability matrix
   V <- crossprod(Vi)
   ## Hessian matrix
   H <- Reduce("+", lapply(g_list, crossprod))
-  list(V = V, H = H)
+  list(g_list = g_list, V = V, H = H)
 }
 ## TODO: so far standard errors are for the transformed parameters.
 ## Jacobian is needed when we compute the standard errors on the paramteres entering optimizer.

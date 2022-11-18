@@ -123,12 +123,11 @@ mvlogit <- function(df = 8L){
                  F_multi = function(U, L, list_R) {
                    U <- qt(plogis(U), df = df)
                    L <- qt(plogis(L), df = df)
-                   unlist(lapply(seq_len(nrow(U)), function(i) sadmvt(df = df,
-                                                               lower = L[i, ],
-                                                               upper = U[i, ],
-                                                               mean = rep.int(0, NCOL(U)),
-                                                               S = list_R[[i]])))},
-
+                   unlist(lapply(seq_len(nrow(U)), function(i)
+                     pmvt(df = df,
+                          lower = L[i, ],
+                          upper = U[i, ],
+                          sigma = list_R[[i]])))},
                  deriv.fun =  list(
                    dF1dx = dlogis,
                    dF2dx = function(x, y, r) deriv_biv_t_copula(x, y, r, df = df) ,

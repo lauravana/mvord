@@ -16,4 +16,4 @@ Suggests: knitr, rmarkdown, xtable, colorspace
 VignetteBuilder: knitr
 Encoding: UTF-8
 NeedsCompilation: yes
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.1

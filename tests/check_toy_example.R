@@ -70,7 +70,7 @@ df$X3 <- cut(df$X2, c(-Inf, -0.2, 0.2, Inf))
 #
 #
 #
-res <- mvord::mvord(formula = MMO(Y) ~  0 + X1 + X2,
+res <- mvord(formula = MMO(Y) ~  0 + X1 + X2,
                      data = df,
                      link = mvprobit(),
                      error.structure = cor_general(~1),
