@@ -264,7 +264,9 @@ derivs_ana <- function(rho){
 
   S <- attr(rho$error.structure, "covariate")
 
-  sigmas <- rho$build_error_struct(rho$error.structure, par_sigma, rveclen = length(rho$combis)) ## TODO: not working nicely with specified combis
+  sigmas <- rho$build_error_struct(rho$error.structure,
+                                   par_sigma,
+                                   rveclen = length(rho$combis)) ## TODO: not working nicely with specified combis
   ###############################################
   rho$offsetu <- set_offset_threshold_u(rho)
   rho$offsetl <- set_offset_threshold_l(rho)

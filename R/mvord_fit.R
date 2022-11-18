@@ -102,7 +102,8 @@ mvord.fit <- function(rho){
                                   fix2firstlast = transf_thresholds_fix2_firstlast,
                                   fixall        = transf_thresholds_fixall)
   rho$build_error_struct <- ifelse(attr(rho$error.structure, "npar") == 0,
-                                   build_error_struct_fixed,  build_error_struct)
+                                   build_error_struct_fixed,
+                                   build_error_struct)
 
   #################################
   ## make covariate matrices

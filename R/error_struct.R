@@ -270,7 +270,7 @@ build_error_struct.cov_general <-
     pos <- npar.cor * nlev
     sd_lev <- sapply(1:nlev,
                      function(l) exp(tpar[pos + (l - 1) * ndim + seq_len(ndim)]))
-    sdVec <- covar %*% t(sd_lev)
+    sdVec <- tcrossprod(covar, sd_lev)
     return(list(rVec = rVec, sdVec = sdVec))
   }
 
