@@ -188,7 +188,8 @@ NULL
 #' @importFrom pbivnorm pbivnorm
 #' @importFrom MASS polr
 #' @importFrom utils combn data write.table
-#' @importFrom mnormt sadmvn sadmvt
+#' @importFrom mnormt sadmvn
+#' @importFrom mvtnorm pmvt
 #' @importFrom Matrix bdiag
 #' @importFrom numDeriv grad hessian
 #' @import minqa
@@ -710,6 +711,7 @@ mvord <- function(formula,
   rho$formula.input <- formula
   rho$PL.lag <- PL.lag
   rho$solver <- control$solver
+  rho$combis <- control$combis
   rho$control <- control$solver.optimx.control
   check_args_optimizer(rho)
   check_args_error.structure(error.structure, data)

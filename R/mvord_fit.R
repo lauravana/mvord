@@ -50,7 +50,7 @@ mvord.fit <- function(rho){
   # vector of number of parameters for each coefficient
   rho$npar.beta <- 0
   if (length(rho$constraints) > 0) rho$npar.beta <- sapply(rho$constraints, NCOL)
-   #number of total coefficients
+  #number of total coefficients
   rho$npar.betas <- sum(rho$npar.beta)
 
   check_args_constraints(rho)
@@ -58,7 +58,7 @@ mvord.fit <- function(rho){
   ##INCLUDE CHECKS here
   check_args_thresholds(rho)
 
-##############################################################################################
+  ##############################################################################################
   rho$ind.thresholds <- get_ind_thresholds(rho$threshold.constraints, rho)
 
   rho$inf.value <- 10000
@@ -69,7 +69,7 @@ mvord.fit <- function(rho){
   # starting values
   ###############################
   if (is.null(rho$start.values)) {
-     rho$start <- c(get_start_values(rho), start_values(rho$error.structure))
+    rho$start <- c(get_start_values(rho), start_values(rho$error.structure))
   } else {
     if(length(unlist(rho$start.values)) !=  (rho$npar.thetas + rho$npar.betas)){
       cat(paste0("length should be ", rho$npar.thetas + rho$npar.betas))
@@ -81,19 +81,18 @@ mvord.fit <- function(rho){
       rho$start.values$theta[[rho$threshold.constraints[j]]]
       #rho$start.values$theta[[1]]
     })
-    
+
     gamma.start <- lapply(seq_len(rho$ndim), function(j) {
       theta.start[[j]][is.na(theta.start[[j]])] <-  rho$start.values$theta[[j]]
       theta2gamma(theta.start[[j]])
     })
     start.val.gamma <- lapply(seq_len(rho$ndim),
-      function(j) gamma.start[[j]][is.na(rho$threshold.values[[j]])]) #gammas
+                              function(j) gamma.start[[j]][is.na(rho$threshold.values[[j]])]) #gammas
     start.val.gamma <- unlist(start.val.gamma[!duplicated(rho$threshold.constraints)])
     #transform error.struct parameters
     rho$start <- c(start.val.gamma,
                    (rho$start.values$beta),#betas
                    start_values(rho$error.structure))
-    print(rho$start)
   }
   #source("mvord/R/utilities.R")
   rho$transf_thresholds <- switch(rho$threshold,
@@ -107,7 +106,7 @@ mvord.fit <- function(rho){
   #################################
   ## make covariate matrices
   #################################
-   rho$p <- NCOL(rho$x[[1]])
+  rho$p <- NCOL(rho$x[[1]])
   rho$inds.cat <- lapply(seq_len(rho$ndim), function(j)
     seq_len(rho$ntheta[j]) +  rho$ncat.first.ind[j] - 1)
   rho$indjbeta <- lapply(seq_len(rho$ndim), function(j) {
@@ -124,53 +123,53 @@ mvord.fit <- function(rho){
   # rho$y[416,]
   # rho$y[1:10,]
   if(rho$p > 0) {
-      x_center <- vector("list", rho$ndim)
-      x_scale <- vector("list", rho$ndim)
-      for (j in seq_len(rho$ndim)) {
-        ## standardize numeric variables
-        mu <- double(rho$p)
-        sc <- rep.int(1, rho$p)
-        ind_int <- attr(x_new[[j]], "assign") != 0
-        tmp <- scale_mvord(x_new[[j]][, ind_int, drop = FALSE])
-        x_new[[j]][, ind_int] <- tmp$x
-        mu[ind_int] <- tmp$mu
-        sc[ind_int] <- tmp$sc
-        x_center[[j]] <- mu
-        x_scale[[j]] <- sc
-      }
-      constraints_scaled <- lapply(seq_along(rho$constraints), function(p) {
-        sxp <- sapply(x_scale, "[", p)
-        x <- rho$constraints[[p]]
-        #first index of 1
-        fi <- apply(x, 2, function(y) which(y == 1)[1])
-        fi[is.na(fi)] <- 1
-        sweep(x * sxp[dim_ind], 2, sxp[dim_ind[fi]], "/")
-      })
-      if (length(constraints_scaled) > 0) {
-        rho$constraints_mat <- bdiag(constraints_scaled)
-      } else {
-        rho$constraints_mat <- numeric(0)
-      }
-      ## scale and center for par_beta
-      tmp <- (lapply(seq_along(rho$constraints), function(p) {
-        sxp <- sapply(x_scale, "[", p)
-        mxp <- sapply(x_center, "[", p)
-        fi <- apply(rho$constraints[[p]], 2, function(y) which(y == 1)[1])
-        fi[is.na(fi)] <- 1
-        list(scale = sxp[dim_ind[fi]], center = mxp[dim_ind[fi]])
-        }))
-      rho$fi_scale  <- unlist(sapply(tmp, "[", "scale"))
-      rho$fi_center <- unlist(sapply(tmp, "[", "center"))
+    x_center <- vector("list", rho$ndim)
+    x_scale <- vector("list", rho$ndim)
+    for (j in seq_len(rho$ndim)) {
+      ## standardize numeric variables
+      mu <- double(rho$p)
+      sc <- rep.int(1, rho$p)
+      ind_int <- attr(x_new[[j]], "assign") != 0
+      tmp <- scale_mvord(x_new[[j]][, ind_int, drop = FALSE])
+      x_new[[j]][, ind_int] <- tmp$x
+      mu[ind_int] <- tmp$mu
+      sc[ind_int] <- tmp$sc
+      x_center[[j]] <- mu
+      x_scale[[j]] <- sc
+    }
+    constraints_scaled <- lapply(seq_along(rho$constraints), function(p) {
+      sxp <- sapply(x_scale, "[", p)
+      x <- rho$constraints[[p]]
+      #first index of 1
+      fi <- apply(x, 2, function(y) which(y == 1)[1])
+      fi[is.na(fi)] <- 1
+      sweep(x * sxp[dim_ind], 2, sxp[dim_ind[fi]], "/")
+    })
+    if (length(constraints_scaled) > 0) {
+      rho$constraints_mat <- bdiag(constraints_scaled)
+    } else {
+      rho$constraints_mat <- numeric(0)
+    }
+    ## scale and center for par_beta
+    tmp <- (lapply(seq_along(rho$constraints), function(p) {
+      sxp <- sapply(x_scale, "[", p)
+      mxp <- sapply(x_center, "[", p)
+      fi <- apply(rho$constraints[[p]], 2, function(y) which(y == 1)[1])
+      fi[is.na(fi)] <- 1
+      list(scale = sxp[dim_ind[fi]], center = mxp[dim_ind[fi]])
+    }))
+    rho$fi_scale  <- unlist(sapply(tmp, "[", "scale"))
+    rho$fi_center <- unlist(sapply(tmp, "[", "center"))
   } else rho$constraints_mat <- integer()
   ## Upper and lower matrices
   rho$XcatU <- vector("list", rho$ndim)
   rho$XcatL <- vector("list", rho$ndim)
   if (rho$p > 0) {
-  for (j in seq_len(rho$ndim)) {
+    for (j in seq_len(rho$ndim)) {
       ncat <- rho$ntheta[j] + 1
       mm <- model.matrix(~ - 1 + rho$y[,j] : x_new[[j]],
-              model.frame(~ - 1 + rho$y[,j] : x_new[[j]],
-              na.action = function(x) x))
+                         model.frame(~ - 1 + rho$y[,j] : x_new[[j]],
+                                     na.action = function(x) x))
       rho$XcatL[[j]] <- mm[,-(ncat * (seq_len(rho$p) - 1) + 1), drop = F]
       rho$XcatU[[j]] <- mm[,-(ncat * seq_len(rho$p)), drop = F]
     }
@@ -185,25 +184,31 @@ mvord.fit <- function(rho){
   rho$contr_theta <- do.call("rbind", rep.int(list(diag(rho$nthetas)), rho$p))
   ## make function which compute correction factor for thresholds:
   if(rho$p > 0){
-  rho$mat_center_scale <- bdiag(rho$constraints) %*% c(rho$fi_center/rho$fi_scale)
+    rho$mat_center_scale <- bdiag(rho$constraints) %*% c(rho$fi_center/rho$fi_scale)
   } else rho$mat_center_scale <- integer()
   rho$thold_correction <- vector("list", rho$ndim)
   is.dup <- duplicated(rho$threshold.constraints)
   if(rho$p > 0){
     rho$thold_correction <-lapply(seq_len(rho$ndim), build_correction_thold_fun0, rho = rho)
-  if (any(is.dup)) {
+    if (any(is.dup)) {
       tmp <- lapply(which(is.dup), build_correction_thold_fun, rho = rho)
       rho$thold_correction[which(is.dup)] <- tmp
-  }
+    }
   } else {
     rho$thold_correction <-lapply(seq_len(rho$ndim), build_correction_thold_fun0, rho = rho)
   }
   #############################################################################
   ## help variables to save computation in the likelihood function
-  rho$combis <- combn(rho$ndim, 2, simplify = F)
+  if (is.null(rho$combis)) {
+    rho$combis <- combn(rho$ndim, 2, simplify = FALSE)
+  } else {
+    check_combis(rho)
+  }
+
   rho$dummy_pl_lag <- sapply(rho$combis, function(x)
     diff(x) <= rho$PL.lag)
-  rho$combis <- rho$combis[rho$dummy_pl_lag == 1]
+  rho$combis <- rho$combis[rho$dummy_pl_lag]
+
   ## for which subjects is q_i = 1
   ind_i <- rowSums(!is.na(rho$y)) == 1
   rho$ind_univ <- which(!is.na(rho$y) & ind_i, arr.ind=T)
@@ -214,9 +219,9 @@ mvord.fit <- function(rho){
 
   rho$ind_i <- lapply(seq_along(rho$combis), function(h)  which(rho$ind_kl[[h]]))
   rho$combis_fast <- lapply(seq_along(rho$combis),function(h){
-      list("combis" = rho$combis[[h]],
-           "ind_i" = rho$ind_i[[h]],
-           "r" = rep(h,length(rho$ind_i[[h]])))
+    list("combis" = rho$combis[[h]],
+         "ind_i" = rho$ind_i[[h]],
+         "r" = rep(h,length(rho$ind_i[[h]])))
   })
 
   rho$n_biv <- sum(sapply(rho$ind_i, length))
@@ -228,12 +233,12 @@ mvord.fit <- function(rho){
      attr(rho$error.structure, "formula")[[2]] == 1 & !isTRUE(rho$error.structure$fixed) &
      !anyNA(rho$coef.constraints_input) &
      all(sapply(seq_len(length(rho$x)-1), function(j){
-    if((NCOL(rho$x[[j]]) == 0) & (NCOL(rho$x[[j + 1]]) == 0)) {TRUE
-      }else if(any(sapply(rho$x, anyNA))) FALSE else{
-    rho$x[[j]] == rho$x[[j + 1]]
-    }
-  }))){
-    rho$fast_fit <- TRUE
+       if((NCOL(rho$x[[j]]) == 0) & (NCOL(rho$x[[j + 1]]) == 0)) {TRUE
+       }else if(any(sapply(rho$x, anyNA))) FALSE else{
+         rho$x[[j]] == rho$x[[j + 1]]
+       }
+     }))){
+    rho$fast_fit <- FALSE
   } else rho$fast_fit <- FALSE
   #rho$fast_fit <- FALSE #TODO at the moment always use PL_fun
 
@@ -285,13 +290,13 @@ mvord.fit <- function(rho){
   ## Construct original parameters
   par_beta <- rho$optpar[rho$npar.thetas + seq_len(rho$npar.betas)]
   if(rho$p > 0){
-  betatilde <- rho$constraints_mat %*% par_beta
-  par_theta <- rho$transf_thresholds(rho$optpar[seq_len(rho$npar.thetas)], rho, betatilde)
-  thetatilde <- lapply(seq_len(rho$ndim), function(j)
-   par_theta[[j]] + rho$thold_correction[[j]](betatilde, k = j, rho = rho))
-  betatildemu <-  betatilde * rho$mat_center_scale
-  br <- drop(crossprod(rho$contr_theta, betatildemu[,1]))
-  correction <- lapply(rho$inds.cat, function(k) br[k])
+    betatilde <- rho$constraints_mat %*% par_beta
+    par_theta <- rho$transf_thresholds(rho$optpar[seq_len(rho$npar.thetas)], rho, betatilde)
+    thetatilde <- lapply(seq_len(rho$ndim), function(j)
+      par_theta[[j]] + rho$thold_correction[[j]](betatilde, k = j, rho = rho))
+    betatildemu <-  betatilde * rho$mat_center_scale
+    br <- drop(crossprod(rho$contr_theta, betatildemu[,1]))
+    correction <- lapply(rho$inds.cat, function(k) br[k])
   } else {
     correction <- rep.int(list(0), rho$ndim)
     par_theta <- rho$transf_thresholds(rho$optpar[seq_len(rho$npar.thetas)], rho, 0)
@@ -311,7 +316,7 @@ mvord.fit <- function(rho){
   ##############################################
   res <- mvord_finalize(rho)
   if (rho$se) {
-     rownames(rho$varGamma) <- colnames(rho$varGamma) <- c(names(unlist(res$theta))[is.na(unlist(rho$threshold.values))][!duplicated(unlist(rho$ind.thresholds))],                                                        names(res$beta),                                                     attr(res$error.struct, "parnames"))
+    rownames(rho$varGamma) <- colnames(rho$varGamma) <- c(names(unlist(res$theta))[is.na(unlist(rho$threshold.values))][!duplicated(unlist(rho$ind.thresholds))],                                                        names(res$beta),                                                     attr(res$error.struct, "parnames"))
   }
   ## clean up
   rho$XcatU <- NULL
@@ -328,7 +333,7 @@ mvord.fit <- function(rho){
   rho$constraints_mat <- NULL
   rho$ind_univ <- NULL
   rho$ind_kl <- NULL
-  rho$combis <- NULL
+  # rho$combis <- NULL
   rho$fi_scale <- NULL
   rho$fi_center <- NULL
   rho$mat_center_scale <- NULL
@@ -369,6 +374,7 @@ mvord.fit <- function(rho){
 # k<-1
 # h<-1
 # par <- rho$start
+# PLfun(par, rho)
 PLfun <- function(par, rho){
   tmp <- transf_par(par, rho)
   ## check for q_i = 1
@@ -384,9 +390,9 @@ PLfun <- function(par, rho){
     r = tmp[["corr_par"]])
   prh[prh < .Machine$double.eps] <- .Machine$double.eps
   # return(-(sum(log(prh)) + sum(log(pr))))
- # -sum(log(c(prh, pr)))
+  # -sum(log(c(prh, pr)))
   -sum(rho[["weights_fast"]] * log(c(prh, pr)))
-    # - sum(rho$weights * logp)
+  # - sum(rho$weights * logp)
 }
 # PLfun <- function(par, rho){
 #   tmp <- transf_par(par, rho)

@@ -11,9 +11,9 @@ Description: A flexible framework for fitting multivariate
     ordinal regression models with composite likelihood methods. Methodological details are given in Hirk, Hornik, Vana (2020) <doi:10.18637/jss.v093.i04>.
 License: GPL-3
 Depends: minqa, BB, ucminf, dfoptim, R (>= 3.5.0)
-Imports: MASS, pbivnorm, stats, optimx, mnormt, numDeriv, Matrix
+Imports: MASS, pbivnorm, stats, optimx, mnormt, numDeriv, Matrix, mvtnorm
 Suggests: knitr, rmarkdown, xtable, colorspace
 VignetteBuilder: knitr
 Encoding: UTF-8
 NeedsCompilation: yes
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.1

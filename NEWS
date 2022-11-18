@@ -1,5 +1,10 @@
 This file documents updates and changes in the package mvord
 
+changes in version 1.1.2 (2022-11-18)
+- added a combis argument in mvord.control which allows the specification of the combinations to be used, if user does not want to use all. 
+- for logit link replaced sadmvt with ... sadmvt cannot not handle dimension larger than d=20 
+- fixed bug for standard error when threshold.coef are e.g., rep(1:3, 3).
+
 changes in version 1.1.1 (2020-03-16)
 - fixed bug for value0 with cor_ar1
 
