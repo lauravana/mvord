@@ -277,7 +277,9 @@ build_correction_thold_fun0 <- function(j, rho) {
 transf_par <- function(par, rho) {
   par_sigma <- par[rho[["npar.thetas"]] + rho[["npar.betas"]] +
                      seq_len(attr(rho[["error.structure"]], "npar"))]
-  sigmas <- rho[["build_error_struct"]](rho[["error.structure"]], par_sigma)
+  sigmas <- rho[["build_error_struct"]](rho[["error.structure"]],
+                                        par_sigma,
+                                        rveclen=length(rho$combis))
   par_beta <- par[rho[["npar.thetas"]] + seq_len(rho[["npar.betas"]])]
   betatilde <- rho[["constraints_mat"]] %*% par_beta
   par_theta <- rho[["transf_thresholds"]](par[seq_len(rho[["npar.thetas"]])], rho,

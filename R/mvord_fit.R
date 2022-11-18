@@ -101,7 +101,8 @@ mvord.fit <- function(rho){
                                   fix2first     = transf_thresholds_fix2_first,
                                   fix2firstlast = transf_thresholds_fix2_firstlast,
                                   fixall        = transf_thresholds_fixall)
-  rho$build_error_struct <- ifelse(attr(rho$error.structure, "npar") == 0, build_error_struct_fixed,  build_error_struct)
+  rho$build_error_struct <- ifelse(attr(rho$error.structure, "npar") == 0,
+                                   build_error_struct_fixed,  build_error_struct)
 
   #################################
   ## make covariate matrices
@@ -240,7 +241,6 @@ mvord.fit <- function(rho){
      }))){
     rho$fast_fit <- TRUE
   } else rho$fast_fit <- FALSE
-  #rho$fast_fit <- FALSE #TODO at the moment always use PL_fun
 
   if(rho$fast_fit){
     #TODO for constraints

@@ -231,7 +231,7 @@ init_fun.cov_general <-
 ## ind_sd <- cumsum(c(1, ndim - seq_len(ndim - 1) + 1))
 build_error_struct_fixed.cov_general <-
   ## builds the correlation matrix when fixed = T of cor_general objects
-  function(eobj, tpar = NULL)
+  function(eobj, tpar = NULL, rveclen = NULL)
   {
     ## takes the transformed parameters and builds initializes some attributes of cor_general objects
     ndim <- attr(eobj, "ndim")
@@ -244,7 +244,7 @@ build_error_struct_fixed.cov_general <-
 
 
 build_error_struct.cov_general <-
-  function(eobj, tpar)
+  function(eobj, tpar, rveclen = NULL)
   {
     ## takes the transformed parameters and builds/initializes some attributes of
     ## cor_general objects
@@ -381,7 +381,7 @@ init_fun.cor_general <-
 
 build_error_struct_fixed.cor_general <-
   ## builds the correlation matrix when fixed = T of cor_general objects
-  function(eobj, tpar = NULL)
+  function(eobj, tpar = NULL, rveclen = NULL)
   {
     ## takes the transformed parameters and builds initializes some attributes of cor_general objects
     sd <- rep.int(1, attr(eobj, "ndim"))
@@ -390,7 +390,7 @@ build_error_struct_fixed.cor_general <-
 
 
 build_error_struct.cor_general <-
-  function(eobj, tpar)
+  function(eobj, tpar, rveclen = NULL)
   {
     ## takes the transformed parameters and builds initializes some attributes of cor_general eobjs
     ndim <- attr(eobj, "ndim")
@@ -516,10 +516,9 @@ init_fun.cor_ar1 <-
 #eobj <- rho[["error.structure"]]
 build_error_struct_fixed.cor_ar1 <-
   ## builds the correlation matrix when fixed = T of cor_ar1 objects
-  function(eobj, tpar = NULL){
+  function(eobj, tpar = NULL, rveclen = NULL){
     r <- eobj$value_tmp
     ndim <- attr(eobj, "ndim")
-    npar1 <- ndim * (ndim - 1)/2
     corr_pars <- do.call(rbind, lapply(seq_along(r), function(i){
       sigma <- diag(ndim)
       sigma[lower.tri(sigma)]  <- r[i]^sequence((ndim-1):1)
@@ -532,7 +531,7 @@ build_error_struct_fixed.cor_ar1 <-
   }
 
 build_error_struct.cor_ar1 <-
-  function(eobj, tpar)
+  function(eobj, tpar, rveclen = NULL)
   {
     ## takes the transformed parameters and builds initializes some attributes of cor_general eobjs
     ndim <- attr(eobj, "ndim")
@@ -609,13 +608,13 @@ init_fun.cor_equi <-
   }
 
 build_error_struct_fixed.cor_equi <-
-  function(eobj, tpar = NULL)
+  function(eobj, tpar = NULL, rveclen = NULL)
   {
     ## tpar argument: transformed parameters (from optimizer)
     ## builds the correlation and standard deviation parameters for cor_equi eobjs
     r <- eobj$value_tmp
     ndim <- attr(eobj, "ndim")
-    npar1 <- ndim * (ndim - 1)/2
+    npar1 <- rveclen #ndim * (ndim - 1)/2
     corr_pars <- matrix(rep(r, npar1), ncol = npar1)
     if (is.null(ncol(corr_pars)))
       dim(corr_pars) <- c(length(corr_pars), 1)
@@ -624,7 +623,7 @@ build_error_struct_fixed.cor_equi <-
   }
 
 build_error_struct.cor_equi <-
-  function(eobj, tpar)
+  function(eobj, tpar, rveclen = NULL)
   {
     ## tpar argument: transformed parameters (from optimizer)
     ## builds the correlation and standard deviation parameters for cor_equi eobjs
@@ -632,7 +631,7 @@ build_error_struct.cor_equi <-
     covar <- attr(eobj, "covariate")
     z <- covar %*% tpar
     r <- z2r(z)
-    npar1 <- ndim * (ndim - 1)/2
+    npar1 <- rveclen#ndim * (ndim - 1)/2
     corr_pars <- matrix(rep(r, npar1), ncol = npar1)
     if (is.null(ncol(corr_pars)))
       dim(corr_pars) <- c(length(corr_pars), 1)
