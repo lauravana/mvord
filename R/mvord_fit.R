@@ -238,7 +238,7 @@ mvord.fit <- function(rho){
          rho$x[[j]] == rho$x[[j + 1]]
        }
      }))){
-    rho$fast_fit <- FALSE
+    rho$fast_fit <- TRUE
   } else rho$fast_fit <- FALSE
   #rho$fast_fit <- FALSE #TODO at the moment always use PL_fun
 

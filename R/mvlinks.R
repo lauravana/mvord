@@ -128,6 +128,7 @@ mvlogit <- function(df = 8L){
                           lower = L[i, ],
                           upper = U[i, ],
                           sigma = list_R[[i]])))},
+
                  deriv.fun =  list(
                    dF1dx = dlogis,
                    dF2dx = function(x, y, r) deriv_biv_t_copula(x, y, r, df = df) ,

@@ -41,7 +41,7 @@ NULL
 #' @name data_cr_panel
 #' @docType data
 # #' @keywords datasets
-#' @usage data(data_cr_panel)
+#' @usage data("data_cr_panel", package = "mvord")
 #' @format A data frame with 11320 rows and 9 variables
 NULL
 
@@ -71,7 +71,7 @@ NULL
 #' @name data_cr
 #' @docType data
 # #' @keywords datasets
-#' @usage data(data_cr)
+#' @usage data("data_cr", package = "mvord")
 #' @format A data frame with 690 rows and 11 columns
 NULL
 
@@ -97,7 +97,7 @@ NULL
 #' @name data_mvord2
 #' @docType data
 # #' @keywords datasets
-#' @usage data(data_mvord2)
+#' @usage data("data_mvord2", package = "mvord")
 #' @format A data frame with 1000 rows and 10 variables
 NULL
 
@@ -123,7 +123,7 @@ NULL
 #' @name data_mvord_panel
 #' @docType data
 # #' @keywords datasets
-#' @usage data(data_mvord_panel)
+#' @usage data("data_mvord_panel", package = "mvord")
 #' @format A data frame with 10000 rows and 9 variables
 NULL
 
@@ -156,7 +156,7 @@ NULL
 #' @name data_mvord
 #' @docType data
 # #' @keywords datasets
-#' @usage data(data_mvord)
+#' @usage data("data_mvord", package = "mvord")
 #' @format A data frame with 3000 rows and 9 variables
 NULL
 
@@ -178,8 +178,32 @@ NULL
 #' @name data_mvord_toy
 #' @docType data
 # #' @keywords datasets
-#' @usage data(data_mvord_toy)
+#' @usage data("data_mvord_toy", package = "mvord")
 #' @format A data frame with 100 rows and 6 variables
+NULL
+
+#' Essay data
+#'
+#' The multirater agreement data set is taken from Chapter 5 in "Ordinal Data Modeling",
+#' from Johnson, Valen E and Albert, J. The data consists of grades assigned to
+#' 198 essays by 5 experts, each of whom rated all essays on a 10-point
+#' scale. A score of 10 indicates an excellent essay. In addition, the
+#' average word length is also available as an essay characteristic.
+#'
+#' \itemize{
+#'   \item \code{Judge1} ordinal outcome:  grades assigned by expert 1
+#'   \item \code{Judge2} ordinal outcome:  grades assigned by expert 2
+#'   \item \code{Judge3} ordinal outcome:  grades assigned by expert 3
+#'   \item \code{Judge4} ordinal outcome:  grades assigned by expert 4
+#'   \item \code{Judge5} ordinal outcome:  grades assigned by expert 5
+#'   \item \code{wl} covariate: word length
+#' }
+#'
+#' @name essay_data
+#' @docType data
+# #' @keywords datasets
+#' @usage data("essay_data", package = "mvord")
+#' @format A data frame with 198 rows and 6 variables
 NULL
 
 ##IMPORTS
