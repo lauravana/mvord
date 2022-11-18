@@ -6,7 +6,7 @@
 \title{Simulated panel of credit ratings}
 \format{A data frame with 10000 rows and 9 variables}
 \usage{
-data(data_mvord_panel)
+data("data_mvord_panel", package = "mvord")
 }
 \description{
 A simulated data set where one rater assigns ratings over the years \eqn{2001} to \eqn{2010} for a set of firms.

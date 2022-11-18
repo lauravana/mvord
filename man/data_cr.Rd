@@ -6,7 +6,7 @@
 \title{Simulated credit ratings}
 \format{A data frame with 690 rows and 11 columns}
 \usage{
-data(data_cr)
+data("data_cr", package = "mvord")
 }
 \description{
 A data set containing simulated credit ratings and simulated perfomance measures from four raters.

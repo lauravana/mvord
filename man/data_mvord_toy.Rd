@@ -6,7 +6,7 @@
 \title{Data set toy example}
 \format{A data frame with 100 rows and 6 variables}
 \usage{
-data(data_mvord_toy)
+data("data_mvord_toy", package = "mvord")
 }
 \description{
 A data set containing two simulated ordinal responses with three categories,

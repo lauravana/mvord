@@ -6,7 +6,7 @@
 \title{Simulated credit ratings}
 \format{A data frame with 1000 rows and 10 variables}
 \usage{
-data(data_mvord2)
+data("data_mvord2", package = "mvord")
 }
 \description{
 A simulated data set where three different raters (\code{rater1, rater2} and \code{rater3})
