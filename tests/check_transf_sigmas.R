@@ -23,7 +23,8 @@ sigma <- sigma + t(sigma) - diag(diag(sigma))
 l <- list(rVec = t(sapply(1:10, function(i) sigma[lower.tri(sigma)])),
 	 sdVec = rep(1, ndim))
 
-mvord:::check(identical(mvord:::build_error_struct.cor_ar1(error.structure, par.sigma), l))
+mvord:::check(identical(mvord:::build_error_struct.cor_ar1(error.structure,
+                                                           par.sigma), l))
 
 # rho$ncor.levels <- 2
 # rho$npar.cor <- 1
@@ -59,7 +60,8 @@ sigma
 l <- list(rVec = t(sapply(1:10, function(i) sigma[lower.tri(sigma)])),
 	 sdVec = rep(1, ndim))
 
-mvord:::check(identical(mvord:::build_error_struct.cor_equi(error.structure, par.sigma), l))
+mvord:::check(identical(mvord:::build_error_struct.cor_equi(error.structure, par.sigma,
+                                                            rveclen = ndim*(ndim-1)/2), l))
 
 
 par.sigma <- c(0.1,0.2,-0.3)
@@ -69,7 +71,8 @@ sigma <- sigma + t(sigma) - diag(diag(sigma))
 l <- list(rVec = t(sapply(1:10, function(i) sigma[lower.tri(sigma)])),
 	 sdVec = rep(1, ndim))
 
-mvord:::check(identical(mvord:::build_error_struct.cor_equi(error.structure, par.sigma), l))
+mvord:::check(identical(mvord:::build_error_struct.cor_equi(error.structure, par.sigma,
+                                                            rveclen = ndim*(ndim-1)/2), l))
 
 
 # spherical param
