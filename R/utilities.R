@@ -205,6 +205,8 @@ set_args_other <- function(rho) {
                                 nrow = nrow(rho$coef.constraints))
       rho$coef.values[is.na(rho$coef.constraints)] <- 0 #default 0
     } else rho$coef.values <- rho$coef.values_input
+    ## set coef.constraints NA  coef.values are set
+    rho$coef.constraints[!is.na(rho$coef.values)] <- NA
   }
   ## list and coef values can't be used
   if(is.list(rho$coef.constraints_input) && !is.null(rho$coef.values_input)) stop("This coef.constraints design requires offsets instead of coef.values.", call.=FALSE)
