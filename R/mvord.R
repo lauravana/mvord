@@ -1,4 +1,5 @@
 #' @rdname mvord-package
+#' @useDynLib mvord
 #' @title Multivariate Ordinal Regression Models in R.
 #' @description  The R package mvord implements composite likelihood
 #' estimation in the class of multivariate ordinal regression models with probit and logit link.
@@ -213,6 +214,7 @@ NULL
 #' @importFrom MASS polr
 #' @importFrom utils combn data write.table
 #' @importFrom mnormt sadmvn
+#' @importFrom mnormt sadmvt
 #' @importFrom mvtnorm pmvt
 #' @importFrom Matrix bdiag
 #' @importFrom numDeriv grad hessian
@@ -239,7 +241,7 @@ NULL
 #' @details
 #' \describe{
 #' \item{Implementation \code{MMO}:}{
-#'   \itemize{
+#'   \describe{
 #'     \item{\code{data}:}{
 #' In \code{MMO} we use a long format for the input of data, where each row contains a subject index
 #' (\code{i}), a multiple measurement index (\code{j}), an ordinal
@@ -490,13 +492,13 @@ NULL
 #'
 #' An object of \code{\link{class}} \code{"mvord"} is a list containing the following components:
 #'
-#' \itemize{
+#' \describe{
 #'  \item{\code{beta}}{
 #'
 #'  a named \code{\link{matrix}} of regression coefficients}
-#'  \item{\code{theta}}
+#'  \item{\code{theta}}{
 #'
-#'  a named \code{\link{list}}{ of threshold parameters}
+#'  a named \code{\link{list}} of threshold parameters}
 #'   \item{\code{error.struct}}{
 #'
 #'   an object of class \code{\link{error_struct}} containing the parameters of the error
