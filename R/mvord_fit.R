@@ -439,8 +439,8 @@ PLfun_old <- function(par, rho){
   - sum(rho$weights * logp)
 }
 
-.onLoad <- function(library, pkg)
-{
-  library.dynam("mvord", pkg, library)
-  invisible()
-}
+# .onLoad <- function(library, pkg)
+# {
+#   library.dynam("mvord", pkg, library)
+#   invisible()
+# }
