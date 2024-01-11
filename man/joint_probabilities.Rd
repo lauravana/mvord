@@ -4,8 +4,15 @@
 \alias{joint_probabilities}
 \title{Extracts fitted Probabilities for Multivariate Ordinal Regression Models.}
 \usage{
-joint_probabilities(object, response.cat, newdata = NULL, type = "prob",
-  subjectID = NULL, newoffset = NULL, ...)
+joint_probabilities(
+  object,
+  response.cat,
+  newdata = NULL,
+  type = "prob",
+  subjectID = NULL,
+  newoffset = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class \code{'mvord'}.}

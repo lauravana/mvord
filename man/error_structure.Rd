@@ -5,12 +5,12 @@
 \alias{error_structure.mvord}
 \title{Extracts Error Structure of Multivariate Ordinal Regression Models.}
 \usage{
-error_structure(object, type, ...)
+error_structure(eobj, type, ...)
 
-\method{error_structure}{mvord}(object, type = NULL, ...)
+\method{error_structure}{mvord}(eobj, type = NULL, ...)
 }
 \arguments{
-\item{object}{an object of class \code{'mvord'}.}
+\item{eobj}{an object of class \code{'mvord'}.}
 
 \item{type}{choose type \code{"sigmas"}, \code{"alpha"}, \code{"corr"}, or \code{"z"}.}
 

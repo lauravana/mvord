@@ -4,8 +4,14 @@
 \alias{marginal_predict}
 \title{Marginal Predictions for Multivariate Ordinal Regression Models.}
 \usage{
-marginal_predict(object, newdata = NULL, type = "prob", subjectID = NULL,
-  newoffset = NULL, ...)
+marginal_predict(
+  object,
+  newdata = NULL,
+  type = "prob",
+  subjectID = NULL,
+  newoffset = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class \code{'mvord'}.}

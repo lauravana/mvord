@@ -4,11 +4,22 @@
 \alias{mvord}
 \title{Multivariate Ordinal Regression Models.}
 \usage{
-mvord(formula, data, error.structure = cor_general(~1), link = mvprobit(),
-  response.levels = NULL, coef.constraints = NULL, coef.values = NULL,
-  threshold.constraints = NULL, threshold.values = NULL,
-  weights.name = NULL, offset = NULL, PL.lag = NULL, contrasts = NULL,
-  control = mvord.control())
+mvord(
+  formula,
+  data,
+  error.structure = cor_general(~1),
+  link = mvprobit(),
+  response.levels = NULL,
+  coef.constraints = NULL,
+  coef.values = NULL,
+  threshold.constraints = NULL,
+  threshold.values = NULL,
+  weights.name = NULL,
+  offset = NULL,
+  PL.lag = NULL,
+  contrasts = NULL,
+  control = mvord.control()
+)
 }
 \arguments{
 \item{formula}{an object of class \code{\link{formula}} of the form \code{y ~ X1 + ... + Xp}.}
@@ -62,13 +73,13 @@ and the function \cr
 
 An object of \code{\link{class}} \code{"mvord"} is a list containing the following components:
 
-\itemize{
+\describe{
  \item{\code{beta}}{
 
  a named \code{\link{matrix}} of regression coefficients}
- \item{\code{theta}}
+ \item{\code{theta}}{
 
- a named \code{\link{list}}{ of threshold parameters}
+ a named \code{\link{list}} of threshold parameters}
   \item{\code{error.struct}}{
 
   an object of class \code{\link{error_struct}} containing the parameters of the error
@@ -102,7 +113,7 @@ structure as wide data format.
 \details{
 \describe{
 \item{Implementation \code{MMO}:}{
-  \itemize{
+  \describe{
     \item{\code{data}:}{
 In \code{MMO} we use a long format for the input of data, where each row contains a subject index
 (\code{i}), a multiple measurement index (\code{j}), an ordinal

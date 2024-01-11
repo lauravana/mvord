@@ -4,7 +4,9 @@
 \name{data_mvord}
 \alias{data_mvord}
 \title{Simulated credit ratings}
-\format{A data frame with 3000 rows and 9 variables}
+\format{
+A data frame with 3000 rows and 9 variables
+}
 \usage{
 data("data_mvord", package = "mvord")
 }

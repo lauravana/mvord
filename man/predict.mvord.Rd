@@ -4,8 +4,14 @@
 \alias{predict.mvord}
 \title{Predict method for Multivariate Ordinal Regression Models.}
 \usage{
-\method{predict}{mvord}(object, newdata = NULL, type = "prob",
-  subjectID = NULL, newoffset = NULL, ...)
+\method{predict}{mvord}(
+  object,
+  newdata = NULL,
+  type = "prob",
+  subjectID = NULL,
+  newoffset = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class \code{'mvord'}.}

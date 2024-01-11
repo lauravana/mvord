@@ -4,9 +4,13 @@
 \alias{mvord.control}
 \title{Control functions for mvord()}
 \usage{
-mvord.control(se = TRUE, start.values = NULL, combis = NULL,
-  solver = "newuoa", solver.optimx.control = list(maxit = 2e+05, trace = 0,
-  kkt = FALSE))
+mvord.control(
+  se = TRUE,
+  start.values = NULL,
+  combis = NULL,
+  solver = "newuoa",
+  solver.optimx.control = list(maxit = 2e+05, trace = 0, kkt = FALSE)
+)
 }
 \arguments{
 \item{se}{logical, if \code{TRUE} standard errors are computed.}

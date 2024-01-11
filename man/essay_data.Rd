@@ -4,7 +4,9 @@
 \name{essay_data}
 \alias{essay_data}
 \title{Essay data}
-\format{A data frame with 198 rows and 6 variables}
+\format{
+A data frame with 198 rows and 6 variables
+}
 \usage{
 data("essay_data", package = "mvord")
 }

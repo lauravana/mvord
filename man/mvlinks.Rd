@@ -18,7 +18,7 @@ The functions \code{mvlogit()} and \code{mvprobit()} returns an object
 of \code{\link{class}} \code{'mvlink'}.
 An object of \code{\link{class}} \code{'mvlink'} is a list containing the following components:
 
-\itemize{
+\describe{
  \item{\code{name}}{
 
  name of the multivariate link function}
@@ -57,7 +57,7 @@ An object of \code{\link{class}} \code{'mvlink'} is a list containing the follow
   \item{\code{deriv.fun}}{
 
   (needed for computation of analytic standard errors) a list containing the following gradient functions:
-        \itemize{
+        \describe{
            \item{\code{dF1dx}}{ derivative \eqn{dF_1(x)/dx} function,}
            \item{\code{dF2dx}}{ derivative \eqn{dF_2(x,y,r)/dx} function,}
            \item{\code{dF2dr}}{ derivative \eqn{dF_2(x,y,r)/dr } function.}
