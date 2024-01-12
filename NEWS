@@ -1,8 +1,5 @@
 This file documents updates and changes in the package mvord
 
-changes in version 1.2.1 (2024-01-10)
-- fixed bugs from the change NCOL(NULL) returns 0 rather than 1 
-
 changes in version 1.2.0 (2022-11-18)
 - added essay_data to mvord datasets
 - added a combis argument in mvord.control which allows the specification of the combinations to be used, if user does not want to use all. 

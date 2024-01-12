@@ -153,15 +153,15 @@ initialize.error_struct <-
 update.error_struct <-
   ## initializes some attributes of error_struct objects
   ## takes as data the output on mvord_data
-  function(eobj, data, contrasts)
+  function(object, data, contrasts, ...)
   {
-    attr(eobj, "ynames") <- colnames(data$y)
-    #attr(eobj, "subjnames") <- rownames(data$y)
-    attr(eobj, "ndim") <- length(data$x)
-    attr(eobj, "nobs") <- nrow(data$y)
-    attr(eobj, "covariate") <-
-      get_covariate(eobj, data.x = data$x, contrasts = contrasts)
-    eobj
+    attr(object, "ynames") <- colnames(data$y)
+    #attr(object, "subjnames") <- rownames(data$y)
+    attr(object, "ndim") <- length(data$x)
+    attr(object, "nobs") <- nrow(data$y)
+    attr(object, "covariate") <-
+      get_covariate(object, data.x = data$x, contrasts = contrasts)
+    object
   }
 
 finalize.error_struct <-
@@ -659,14 +659,14 @@ finalize_fun.cor_equi <-
 #' @param eobj an object of class \code{'mvord'}.
 #' @param type choose type \code{"sigmas"}, \code{"alpha"}, \code{"corr"}, or \code{"z"}.
 #' @param ... further arguments passed to or from other methods.
-#' @details \itemize{
-#' \item{\code{sigmas}} {extracts the correlation/covariance matrices corresponding to each subject.
+#' @details \describe{
+#' \item{\code{sigmas}}{extracts the correlation/covariance matrices corresponding to each subject.
 #'             Applicable in line with \code{cor_general, cov_general, cor_equi, cor_ar1}.}
-#' \item{\code{alpha}} {extracts the parameters of the covariate dependent error structure.
+#' \item{\code{alpha}}{extracts the parameters of the covariate dependent error structure.
 #' Applicable in line with \code{cor_equi, cor_ar1}.}
-#' \item{\code{corr}} {extracts the subject-specific correlation parameters. Applicable in
+#' \item{\code{corr}}{extracts the subject-specific correlation parameters. Applicable in
 #' line with \code{cor_equi}, \code{cor_ar1}.}
-#' \item{\code{z}} {extracts the subject-specific Fisher-z score. Applicable in line
+#' \item{\code{z}}{extracts the subject-specific Fisher-z score. Applicable in line
 #' with \code{cor_equi, cor_ar1}.}}
 #' @export
 error_structure <- function(eobj, type, ...) UseMethod("error_structure")

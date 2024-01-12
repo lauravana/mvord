@@ -280,13 +280,13 @@ NULL
 #' \item{\code{formula}}{
 #' The ordinal responses (e.g., \code{rating}) are passed by a \code{formula} object.
 #' Intercepts can be included or excluded in the model depending on the model paramterization:
-#' \itemize{
-#' \item {Model without intercept:} If the intercept should be removed the \code{formula} for a given response (\code{rating})
+#' \describe{
+#' \item{Model without intercept:}{ If the intercept should be removed the \code{formula} for a given response (\code{rating})
 #' and covariates (\code{X1} to \code{Xp}) has the following form:
 #'
 #'      \code{formula = MMO(rating, firm_id, rater_id) ~ 0 + X1 + ... + Xp}.
-#'
-#' \item {Model with intercept:} If one wants to include an intercept in the model, there are two equivalent possibilities
+#' }
+#' \item{Model with intercept:}{ If one wants to include an intercept in the model, there are two equivalent possibilities
 #' to set the model \code{formula}. Either one includes the intercept explicitly by:
 #'
 #'     \code{formula = MMO(rating, firm_id, rater_id) ~ 1 + X1 + ... + Xp},
@@ -298,8 +298,9 @@ NULL
 #' }
 #' }
 #' }
+#' }
 #' \item{Implementation \code{MMO2}:}{
-#'   \itemize{
+#'   \describe{
 #'     \item{\code{data}:}{The data structure applied by \code{MMO2} is slightly simplified, where the multiple ordinal
 #' observations as well as the covariates are stored as columns in a \code{\link{data.frame}}. Each subject \eqn{i}
 #' corresponds to one row of the data frame, where all outcomes (with missing
@@ -936,22 +937,22 @@ summary.mvord <- function(object, short = TRUE, call = TRUE, ...){
   invisible(summary.output)
 }
 
-print.summary.mvord <- function(summary.output, ...){
-  if(!is.null(summary.output)){
+print.summary.mvord <- function(x, ...){
+  if(!is.null(x)){
     cat("\nCall: ",
-        summary.output$call, "\n\n", sep = "")
+        x$call, "\n\n", sep = "")
   }
   cat("Formula: ")
-  print(summary.output$formula, ...)
+  print(x$formula, ...)
   cat("\n")
-  write.table(summary.output$info, row.names = FALSE, col.names = FALSE, quote = FALSE)
+  write.table(x$info, row.names = FALSE, col.names = FALSE, quote = FALSE)
   cat("\n")
     cat("Thresholds:\n")
-    if(ncol(summary.output$thresholds) > 1) printCoefmat(summary.output$thresholds) else print(summary.output$thresholds, ...)
+    if(ncol(x$thresholds) > 1) printCoefmat(x$thresholds) else print(x$thresholds, ...)
     cat("\nCoefficients:\n")
-    if(ncol(summary.output$coefficients) > 1) print(summary.output$coefficients) else print(summary.output$coefficients, ...)
+    if(ncol(x$coefficients) > 1) print(x$coefficients) else print(x$coefficients, ...)
   cat("\nError Structure:\n")
-  if(ncol(summary.output$error.structure) > 1) printCoefmat(summary.output$error.structure) else print(summary.output$error.structure, ...)
+  if(ncol(x$error.structure) > 1) printCoefmat(x$error.structure) else print(x$error.structure, ...)
 
 }
 

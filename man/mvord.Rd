@@ -152,13 +152,13 @@ the names of the levels of the ordered categories in ascending or descending ord
 \item{\code{formula}}{
 The ordinal responses (e.g., \code{rating}) are passed by a \code{formula} object.
 Intercepts can be included or excluded in the model depending on the model paramterization:
-\itemize{
-\item {Model without intercept:} If the intercept should be removed the \code{formula} for a given response (\code{rating})
+\describe{
+\item{Model without intercept:}{ If the intercept should be removed the \code{formula} for a given response (\code{rating})
 and covariates (\code{X1} to \code{Xp}) has the following form:
 
      \code{formula = MMO(rating, firm_id, rater_id) ~ 0 + X1 + ... + Xp}.
-
-\item {Model with intercept:} If one wants to include an intercept in the model, there are two equivalent possibilities
+}
+\item{Model with intercept:}{ If one wants to include an intercept in the model, there are two equivalent possibilities
 to set the model \code{formula}. Either one includes the intercept explicitly by:
 
     \code{formula = MMO(rating, firm_id, rater_id) ~ 1 + X1 + ... + Xp},
@@ -170,8 +170,9 @@ or by
 }
 }
 }
+}
 \item{Implementation \code{MMO2}:}{
-  \itemize{
+  \describe{
     \item{\code{data}:}{The data structure applied by \code{MMO2} is slightly simplified, where the multiple ordinal
 observations as well as the covariates are stored as columns in a \code{\link{data.frame}}. Each subject \eqn{i}
 corresponds to one row of the data frame, where all outcomes (with missing

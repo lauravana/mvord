@@ -21,13 +21,13 @@ A generic function which extracts for each subject the estimated
 error structure parameters from objects of class \code{'mvord'}.
 }
 \details{
-\itemize{
-\item{\code{sigmas}} {extracts the correlation/covariance matrices corresponding to each subject.
+\describe{
+\item{\code{sigmas}}{extracts the correlation/covariance matrices corresponding to each subject.
             Applicable in line with \code{cor_general, cov_general, cor_equi, cor_ar1}.}
-\item{\code{alpha}} {extracts the parameters of the covariate dependent error structure.
+\item{\code{alpha}}{extracts the parameters of the covariate dependent error structure.
 Applicable in line with \code{cor_equi, cor_ar1}.}
-\item{\code{corr}} {extracts the subject-specific correlation parameters. Applicable in
+\item{\code{corr}}{extracts the subject-specific correlation parameters. Applicable in
 line with \code{cor_equi}, \code{cor_ar1}.}
-\item{\code{z}} {extracts the subject-specific Fisher-z score. Applicable in line
+\item{\code{z}}{extracts the subject-specific Fisher-z score. Applicable in line
 with \code{cor_equi, cor_ar1}.}}
 }
