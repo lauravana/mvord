@@ -1,2 +1,14 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+examples
+work
+.Rhistory
+writeup_JSS
+src/biv-nt.o
+src/mvord.dll
+src/mvord_init.o
+tests/check_mvord.R
+sim_data
+toolbox
+vignettes/vignette_mvord.pdf
+
