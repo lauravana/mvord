@@ -1,5 +1,5 @@
 \documentclass[nojss]{jss}
-\usepackage{amsmath,amsfonts,enumerate,bm,mathrsfs,bbm,tabularx,multirow,xcolor,thumbpdf,lmodern}
+\usepackage{amsmath,amsfonts,enumerate,bm,mathrsfs,bbold,tabularx,multirow,xcolor,thumbpdf,lmodern}
 \graphicspath{{Figures/}}
 
 
@@ -544,11 +544,11 @@ observed outcomes for subject~$i$ is less than two ($q_i<2$), the
 univariate marginal distribution enters the likelihood. The pairwise
 log-likelihood function is obtained by:
 \begin{align}\label{eqn:logpl}
-  p\ell(\bm\delta)= \sum_{i=1}^n w_i \biggl[& \mathbbm{1}_{\{q_i \geq
-      2\}} \sum_{k=1}^{q-1} \sum_{l=k+1}^{q} \mathbbm{1}_{\{k, l \in J_i\}}\log\left(\Prob(Y_{ik} = r_{ik},
+  p\ell(\bm\delta)= \sum_{i=1}^n w_i \biggl[& \mathbb{1}_{\{q_i \geq
+      2\}} \sum_{k=1}^{q-1} \sum_{l=k+1}^{q} \mathbb{1}_{\{k, l \in J_i\}}\log\left(\Prob(Y_{ik} = r_{ik},
     Y_{il} = r_{il})\right)+ \nonumber \\
-    & \mathbbm{1}_{\{q_i = 1\}} \sum_{k=1}^{q}
-    \mathbbm{1}_{\{k \in J_i\}}\biggl.\log\left(\Prob(Y_{ik} = r_{ik})
+    & \mathbb{1}_{\{q_i = 1\}} \sum_{k=1}^{q}
+    \mathbb{1}_{\{k \in J_i\}}\biggl.\log\left(\Prob(Y_{ik} = r_{ik})
     \right)\biggr].
 \end{align}
 Denoting by $f_{i,1}$ and $f_{i,2}$ the uni- and bivariate density functions
@@ -600,7 +600,7 @@ and
 \widehat H(\bm\delta) = -\frac{1}{n} \sum_{i=1}^n \frac{\partial^2
   p\ell_i(\bm\delta)}{\partial
   \bm\delta\partial\bm\delta^\top} \biggr\rvert_{\bm\delta = \hat{\bm\delta}_{p\ell}} =\frac{1}{n} \sum_{i=1}^n
-\sum_{k=1}^q \sum_{l=k+1}^{q-1} \mathbbm{1}_{\{k, l \in J_i\}} \left(\frac{\partial
+\sum_{k=1}^q \sum_{l=k+1}^{q-1} \mathbb{1}_{\{k, l \in J_i\}} \left(\frac{\partial
   p\ell_{ikl}(\bm\delta)}{\partial \bm\delta}\right)
 \left(\frac{\partial
   p\ell_{ikl}(\bm\delta)}{\partial
@@ -1268,10 +1268,10 @@ estimated.
 
 Consider the following specification of the latent processes in the worked example:
 \begin{align}\label{eqn:m1}
-\widetilde Y_{i1} = \beta_{11} x_{i1} + \beta_{3} \mathbbm{1}_{\{f_{i2}=c2\}} + \epsilon_{i1},\quad
-\widetilde Y_{i2} = \beta_{21} x_{i1} + \beta_{22} x_{i2} + \beta_{3}\mathbbm{1}_{\{f_{i2}=c2\}}+\epsilon_{i2},
+\widetilde Y_{i1} = \beta_{11} x_{i1} + \beta_{3} \mathbb{1}_{\{f_{i2}=c2\}} + \epsilon_{i1},\quad
+\widetilde Y_{i2} = \beta_{21} x_{i1} + \beta_{22} x_{i2} + \beta_{3}\mathbb{1}_{\{f_{i2}=c2\}}+\epsilon_{i2},
 \end{align}
-where $\mathbbm{1}_{\{f_{i2}=c2\}}$ is the indicator function which equals one in case the categorical covariate \code{f2} is equal to class \code{c2}. Class \code{c1} is taken as the baseline category.
+where $\mathbb{1}_{\{f_{i2}=c2\}}$ is the indicator function which equals one in case the categorical covariate \code{f2} is equal to class \code{c2}. Class \code{c1} is taken as the baseline category.
 These restrictions on the regression coefficients are imposed by:
 %
 \begin{Code}
@@ -1393,7 +1393,7 @@ of the pairwise likelihood has the following form:
 \begin{align*}
 p\ell^{\mathit{lag}}_i(\bm\delta)=
  w_i  \left[ \sum_{k = 1}^{q_i-1} \sum_{l =
-k+1}^{q_i}\mathbbm{1}_{\{|k-l|\leq \mathit{lag}\}}  \log \Prob(Y_{ik} = r_{ik},
+k+1}^{q_i}\mathbb{1}_{\{|k-l|\leq \mathit{lag}\}}  \log \Prob(Y_{ik} = r_{ik},
 Y_{il} = r_{il}) \right].
 \end{align*}
 The $\mathit{lag}$ can be fixed by a positive integer argument
