@@ -1,7 +1,7 @@
 Package: mvord
 Title: Multivariate Ordinal Regression Models
-Version: 1.2.2
-Date: 2024-02-27
+Version: 1.2.3
+Date: 2024-04-18
 Author: Rainer Hirk [aut, cre],
         Kurt Hornik [aut],
         Laura Vana [aut],
