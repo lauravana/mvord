@@ -352,9 +352,9 @@ transf_thresholds_fixall <- function(gamma, rho, betatilde){
   betatildemu <- betatilde * rho$mat_center_scale
   # br <- ifdrop(crossprod(rho$contr_theta, betatildemu[,1]))
   lapply(seq_len(rho$ndim), function(j) {
-    br <- ifelse(length(betatildemu) == 0, 0, drop(crossprod(rho$contr_theta, betatildemu[,1]))[rho$inds.cat[[..l..]]])
     ..l.. <- match(rho$threshold.constraints[j],
                    rho$threshold.constraints)
+    br <- ifelse(length(betatildemu) == 0, 0, drop(crossprod(rho$contr_theta, betatildemu[,1]))[rho$inds.cat[[..l..]]])
     rho$threshold.values[[j]] - br
   })
 }
