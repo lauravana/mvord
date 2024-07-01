@@ -1,5 +1,8 @@
 This file documents updates and changes in the package mvord
 
+changes in version 1.2.4 (2024-07-01)
+- change handling of data argument to work also with tibbles
+
 changes in version 1.2.3 (2024-04-18)
 - fixed bug in transf_thresholds_fixall
 
