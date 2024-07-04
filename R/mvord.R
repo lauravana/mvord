@@ -939,6 +939,7 @@ summary.mvord <- function(object, short = TRUE, call = TRUE, ...){
   invisible(summary.output)
 }
 
+#' @export
 print.summary.mvord <- function(x, ...){
   if(!is.null(x)){
     cat("\nCall: ",
@@ -988,7 +989,7 @@ thresholds.mvord <- function(object, ...) object$theta
 # #' @export
 claic <- function(object) UseMethod("claic")
 # #' @rdname claic
-# #' @export
+#' @export
 claic.mvord <- function(object) ifelse(object$rho$se, object$rho$claic, NA)
 
 
@@ -1000,7 +1001,7 @@ claic.mvord <- function(object) ifelse(object$rho$se, object$rho$claic, NA)
 # #' @export
 clbic <- function(object) UseMethod("clbic")
 # #' @rdname clbic
-# #' @export
+#' @export
 clbic.mvord <- function(object) ifelse(object$rho$se, object$rho$clbic, NA)
 
 
@@ -1012,7 +1013,7 @@ clbic.mvord <- function(object) ifelse(object$rho$se, object$rho$clbic, NA)
 # #' @export
 logPL <- function(object) UseMethod("logPL")
 # #' @rdname logPL
-# #' @export
+#' @export
 logPL.mvord <- function(object) as.numeric(-object$rho$objective)
 
 

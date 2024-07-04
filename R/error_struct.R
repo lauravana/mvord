@@ -111,10 +111,12 @@ init_fun <-
 #################
 ##   Methods for error_struct
 #################
+#' @export
 formula.error_struct <-
   ## Accessor for the covariate formula
   function(x, ...) eval(attr(x, "formula"))
 
+#' @export
 get_covariate.error_struct <- function(eobj, data.x, contrasts, ...) {
   covar_mat <- lapply(data.x, function(x)
     suppressWarnings(model.matrix(formula(eobj),
@@ -136,6 +138,7 @@ get_covariate.error_struct <- function(eobj, data.x, contrasts, ...) {
   covar_mat1
 }
 
+#' @export
 initialize.error_struct <-
   ## initializes some attributes of error_struct objects
   ## takes as data the output on mvord_data
@@ -150,6 +153,7 @@ initialize.error_struct <-
     eobj
   }
 
+#' @export
 update.error_struct <-
   ## initializes some attributes of error_struct objects
   ## takes as data the output on mvord_data
@@ -164,6 +168,7 @@ update.error_struct <-
     object
   }
 
+#' @export
 finalize.error_struct <-
   ## initializes some attributes of error_struct objects
   ## takes as data the output on mvord_data
@@ -187,6 +192,7 @@ finalize.error_struct <-
 ###############################
 ### Methods for cov_general ###
 ###############################
+#' @export
 start_values.cov_general <- function(eobj, ...) {
   ## builds starting values for the correlation structure
   tmp <- double(attr(eobj, "npar"))
@@ -194,6 +200,7 @@ start_values.cov_general <- function(eobj, ...) {
   tmp
 }
 
+#' @export
 init_fun.cov_general <-
   function(eobj,  data, contrasts, ...)
   {
@@ -228,7 +235,7 @@ init_fun.cov_general <-
     eobj
   }
 
-## ind_sd <- cumsum(c(1, ndim - seq_len(ndim - 1) + 1))
+#' @export
 build_error_struct_fixed.cov_general <-
   ## builds the correlation matrix when fixed = T of cor_general objects
   function(eobj, tpar = NULL, rveclen = NULL, ...)
@@ -242,7 +249,7 @@ build_error_struct_fixed.cov_general <-
     return(list(rVec = rmat, sdVec = smat))
   }
 
-
+#' @export
 build_error_struct.cov_general <-
   function(eobj, tpar, rveclen = NULL, ...)
   {
@@ -274,6 +281,7 @@ build_error_struct.cov_general <-
     return(list(rVec = rVec, sdVec = sdVec))
   }
 
+#' @export
 finalize_fun.cov_general <-
   function(eobj, tpar, ...)
   {
@@ -334,6 +342,7 @@ finalize_fun.cov_general <-
 #################################
 #### Methods for cor_general ####
 #################################
+#' @export
 start_values.cor_general <- function(eobj, ...) {
   ## builds starting values for the correlation structure
   tmp <- double(attr(eobj, "npar"))
@@ -341,6 +350,7 @@ start_values.cor_general <- function(eobj, ...) {
   tmp
 }
 
+#' @export
 init_fun.cor_general <-
   function(eobj,  data, contrasts, ...)
   {
@@ -378,7 +388,7 @@ init_fun.cor_general <-
     eobj
   }
 
-
+#' @export
 build_error_struct_fixed.cor_general <-
   ## builds the correlation matrix when fixed = T of cor_general objects
   function(eobj, tpar = NULL, rveclen = NULL, ...)
@@ -388,7 +398,7 @@ build_error_struct_fixed.cor_general <-
     return(list(rVec = eobj$value_tmp, sdVec = sd))
   }
 
-
+#' @export
 build_error_struct.cor_general <-
   function(eobj, tpar, rveclen = NULL, ...)
   {
@@ -417,6 +427,7 @@ build_error_struct.cor_general <-
     return(list(rVec = rVec, sdVec = sd))
   }
 
+#' @export
 finalize_fun.cor_general <-
   function(eobj, tpar, ...)
   {
@@ -467,6 +478,7 @@ finalize_fun.cor_general <-
 #############################
 #### Methods for cor_ar1 ####
 #############################
+#' @export
 start_values.cor_ar1 <- function(eobj, ...) {
   ## builds starting values for the correlation structure
   if (eobj$fixed) {
@@ -487,6 +499,7 @@ start_values.cor_ar1 <- function(eobj, ...) {
   tmp
 }
 
+#' @export
 init_fun.cor_ar1 <-
   function(eobj,  data, contrasts, ...)
   {
@@ -513,7 +526,7 @@ init_fun.cor_ar1 <-
   }
 
 
-#eobj <- rho[["error.structure"]]
+#' @export
 build_error_struct_fixed.cor_ar1 <-
   ## builds the correlation matrix when fixed = T of cor_ar1 objects
   function(eobj, tpar = NULL, rveclen = NULL, ...){
@@ -530,6 +543,7 @@ build_error_struct_fixed.cor_ar1 <-
     list(rVec = corr_pars, sdVec=sdVec)
   }
 
+#' @export
 build_error_struct.cor_ar1 <-
   function(eobj, tpar, rveclen = NULL, ...)
   {
@@ -550,6 +564,7 @@ build_error_struct.cor_ar1 <-
     list(rVec = t(corr_pars), sdVec=sdVec)
   }
 
+#' @export
 finalize_fun.cor_ar1 <-
   function(eobj, tpar, ...)
   {
@@ -561,6 +576,7 @@ finalize_fun.cor_ar1 <-
 ##############################
 #### Methods for cor_equi ####
 ##############################
+#' @export
 start_values.cor_equi <- function(eobj, ...) {
   ## builds starting values for the correlation structure
   if (eobj$fixed) {
@@ -582,6 +598,7 @@ start_values.cor_equi <- function(eobj, ...) {
   tmp
 }
 
+#' @export
 init_fun.cor_equi <-
   function(eobj,  data, contrasts, ...)
   {
@@ -607,6 +624,7 @@ init_fun.cor_equi <-
     eobj
   }
 
+#' @export
 build_error_struct_fixed.cor_equi <-
   function(eobj, tpar = NULL, rveclen = NULL, ...)
   {
@@ -622,6 +640,7 @@ build_error_struct_fixed.cor_equi <-
     list(rVec = corr_pars, sdVec=sdVec)
   }
 
+#' @export
 build_error_struct.cor_equi <-
   function(eobj, tpar, rveclen = NULL, ...)
   {
@@ -639,6 +658,7 @@ build_error_struct.cor_equi <-
     list(rVec = corr_pars, sdVec=sdVec)
   }
 
+#' @export
 finalize_fun.cor_equi <-
   function(eobj, tpar, ...)
   {
