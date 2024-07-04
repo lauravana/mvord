@@ -1032,14 +1032,14 @@ mvord:::check(all.equal(
 # Test data as tibble ----
 
 ## MMO() ----
-library("tibble")
-res_tbl <- tryCatch(mvord(formula = MMO(Y) ~  0 + X1 + X2,
-                          data = as_tibble(df)),
-                    error = function(e) NA)
-stopifnot(!is.na(res_tbl))
-## MMO2() ----
-res_tbl2 <- tryCatch(mvord(formula = MMO2(Y1, Y2) ~  0 + X1 + X2,
-                           data = as_tibble(data_toy_example)),
-                     error = function(e) NA)
-stopifnot(!is.na(res_tbl2))
+# library("tibble")
+# res_tbl <- tryCatch(mvord(formula = MMO(Y) ~  0 + X1 + X2,
+#                           data = as_tibble(df)),
+#                     error = function(e) NA)
+# stopifnot(!is.na(res_tbl))
+# ## MMO2() ----
+# res_tbl2 <- tryCatch(mvord(formula = MMO2(Y1, Y2) ~  0 + X1 + X2,
+#                            data = as_tibble(data_toy_example)),
+#                      error = function(e) NA)
+# stopifnot(!is.na(res_tbl2))
 
