@@ -116,8 +116,10 @@ check_args_input1 <- function(rho, data){
   #data
   if(any(!(all.vars(rho$formula) %in% colnames(data)))) stop("All variables in formula have to exist in data.", call. = FALSE)
   ## index
-  if(!all(rho$index %in% colnames(data))) stop("index names do not match with column names of data", call.=FALSE)
-  if (any(duplicated(data[, rho$index]))) stop("Duplicated indexes: Observation(s) have the same subject and measurement index", call. = FALSE)
+  if (!is.null(rho$index)) {
+    if(!all(rho$index %in% colnames(data))) stop("index names do not match with column names of data", call.=FALSE)
+    if (any(duplicated(data[, rho$index]))) stop("Duplicated indexes: Observation(s) have the same subject and measurement index", call. = FALSE)
+  }
   # PL.lag
   if(!is.null(rho$PL.lag)) {
     if (rho$PL.lag <= 0) stop("PL.lag must be greater than 0", call. = FALSE)
