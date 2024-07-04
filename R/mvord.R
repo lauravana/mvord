@@ -939,11 +939,11 @@ summary.mvord <- function(object, short = TRUE, call = TRUE, ...){
   invisible(summary.output)
 }
 
+#' @method print summary mvord
 #' @export
 print.summary.mvord <- function(x, ...){
   if(!is.null(x)){
-    cat("\nCall: ",
-        x$call, "\n\n", sep = "")
+    cat("\nCall: ", gsub("  ", "", deparse(x$call)), "\n\n", sep = "")
   }
   cat("Formula: ")
   print(x$formula, ...)

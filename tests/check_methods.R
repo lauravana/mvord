@@ -1,5 +1,5 @@
-library(mvord)
-data(data_mvord_toy)
+library("mvord")
+data("data_mvord_toy", package = "mvord")
 tolerance <- 1e-6
 
 # convert data_mvord_toy into long format
