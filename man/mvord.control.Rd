@@ -20,10 +20,9 @@ mvord.control(
 \item{combis}{list of length equal to the number of combinations of responses that should enter the pairwise likelihood. Each element contains one pair of integers corresponding to two responses. Defaults to NULL, in which case all pairs are considered.
 Should only be used if user knows the ordering of the responses in the analysis.}
 
-\item{solver}{character string containing the name of the applicable solver of \code{\link{optimx}} (default is \code{"newuoa"})
-or wrapper function for user defined solver.}
-
-\item{solver.optimx.control}{a list of control arguments to be passed to \code{\link{optimx}}. See \code{\link{optimx}}.}
+\item{solver}{character string containing the name of the applicable solver of \code{\link[optimx]{optimx}} (default is \code{"newuoa"})
+or wrapper function for user defined solver.
+@param solver.optimx.control a list of control arguments to be passed to \code{\link[optimx]{optimx}}. See \code{\link[optimx]{optimx}}.}
 }
 \description{
 Control arguments are set for \code{mvord()}.

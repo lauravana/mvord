@@ -700,9 +700,9 @@ set_offset_up <- function(rho){
 #' @param start.values list of (optional) starting values for thresholds and coefficients.
 #' @param combis list of length equal to the number of combinations of responses that should enter the pairwise likelihood. Each element contains one pair of integers corresponding to two responses. Defaults to NULL, in which case all pairs are considered.
 #'    Should only be used if user knows the ordering of the responses in the analysis.
-#' @param solver character string containing the name of the applicable solver of \code{\link{optimx}} (default is \code{"newuoa"})
+#' @param solver character string containing the name of the applicable solver of \code{\link[optimx]{optimx}} (default is \code{"newuoa"})
 #'  or wrapper function for user defined solver.
-#' @param solver.optimx.control a list of control arguments to be passed to \code{\link{optimx}}. See \code{\link{optimx}}.
+#'  @param solver.optimx.control a list of control arguments to be passed to \code{\link[optimx]{optimx}}. See \code{\link[optimx]{optimx}}.
 # #' @param scale If \code{scale = TRUE}, then for each response the corresponding covariates of \code{\link{class}} \code{"numeric"} are standardized before fitting,
 # #'  i.e., by substracting the mean and dividing by the standard deviation.
 #' @seealso \code{\link{mvord}}
