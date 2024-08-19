@@ -14,6 +14,8 @@ Depends: minqa, BB, ucminf, dfoptim, R (>= 3.5.0)
 Imports: MASS, pbivnorm, stats, optimx, mnormt, numDeriv, Matrix, mvtnorm
 Suggests: knitr, rmarkdown, xtable, colorspace, LMest, VGAM
 VignetteBuilder: knitr
+URL: https://github.com/lauravana/mvord
+BugReports: https://github.com/lauravana/mvord/issues
 Encoding: UTF-8
 NeedsCompilation: yes
 RoxygenNote: 7.3.1
