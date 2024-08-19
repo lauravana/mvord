@@ -2,11 +2,15 @@ Package: mvord
 Title: Multivariate Ordinal Regression Models
 Version: 1.2.4
 Date: 2024-07-01
-Author: Rainer Hirk [aut, cre],
-        Kurt Hornik [aut],
-        Laura Vana [aut],
-        Alan Genz [ctb] (Fortran Code)
-Maintainer: Laura Vana <laura.vana@tuwien.ac.at>
+Authors@R: c(
+    person("Rainer", "Hirk", role = c("aut")),
+    person("Kurt", "Hornik", role = c("aut"), 
+           email = "kurt.hornik@wu.ac.at", 
+	   comment = c(ORCID = "0000-0003-4198-9911")),
+    person("Laura", "Vana", role = c("aut", "cre"), 
+          email = "laura.vana@tuwien.ac.at",
+          comment = c(ORCID = "0000-0002-9613-7604")),
+    person("Alan", "Gentz", role = c("ctb")))
 Description: A flexible framework for fitting multivariate
     ordinal regression models with composite likelihood methods. Methodological details are given in Hirk, Hornik, Vana (2020) <doi:10.18637/jss.v093.i04>.
 License: GPL-3
