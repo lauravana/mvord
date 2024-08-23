@@ -7,7 +7,7 @@
 marginal_predict(
   object,
   newdata = NULL,
-  type = "all.prob",
+  type = NULL,
   subjectID = NULL,
   newoffset = NULL,
   ...
@@ -36,15 +36,13 @@ Obtains marginal predictions/fitted measures for objects of class \code{'mvord'}
 The following types can be chosen in \code{marginal_predict}:
 \tabular{ll}{
   \code{type} \tab description\cr
-  \code{"prob"} \tab  predicted marginal probabilities for the observed response categories.\cr
+  \code{"prob"} \tab  (default)  predicted marginal probabilities for the observed response categories.\cr
   \code{"class"} \tab predicted marginal classes of the observed responses.\cr
   \code{"linpred"} \tab predicted linear predictor \cr
   \code{"cum.prob"} \tab predicted marginal cumulative probabilities for the observed response categories.\cr
-  \code{"all.prob"} \tab (default) predicted marginal probabilities for all ordered classes of each response.
+  \code{"all.prob"} \tab predicted marginal probabilities for all ordered classes of each response. Used as default if newdata contains no column for response.
   }
 
-The current implementation supports only out-of-sample predictions only on a test sample which includes
-columns with observed responses.
 The row names of the output correspond to the subjectIDs.
 }
 \seealso{
