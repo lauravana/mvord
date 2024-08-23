@@ -7,7 +7,7 @@
 marginal_predict(
   object,
   newdata = NULL,
-  type = "prob",
+  type = "all.prob",
   subjectID = NULL,
   newoffset = NULL,
   ...
@@ -21,7 +21,7 @@ The names of the variables should correspond to the names of the
  variables used to fit the model. By default the data on which the model
  was estimated is considered.}
 
-\item{type}{types \code{"prob"}, \code{"class"}, \code{"linpred"}, \code{"pred"}, \code{"cum.prob"} are available.}
+\item{type}{types \code{"prob"}, \code{"class"}, \code{"linpred"}, \code{"cum.prob"},  \code{"all.prob"} are available.}
 
 \item{subjectID}{(optional) vector specifying for which subjectIDs the predictions\cr or fitted values should be computed.}
 
@@ -36,14 +36,15 @@ Obtains marginal predictions/fitted measures for objects of class \code{'mvord'}
 The following types can be chosen in \code{marginal_predict}:
 \tabular{ll}{
   \code{type} \tab description\cr
-  \code{"prob"} \tab (default) fitted marginal probabilities for the observed response categories.\cr
-  \code{"class"} \tab fitted marginal classes of the observed responses.\cr
-  \code{"linpred"} \tab linear predictor \cr
-  \code{"cum.prob"} \tab fitted marginal cumulative probabilities for the observed response categories.\cr
-  \code{"all.prob"} \tab fitted marginal probabilities for all ordered classes of each response.
+  \code{"prob"} \tab  predicted marginal probabilities for the observed response categories.\cr
+  \code{"class"} \tab predicted marginal classes of the observed responses.\cr
+  \code{"linpred"} \tab predicted linear predictor \cr
+  \code{"cum.prob"} \tab predicted marginal cumulative probabilities for the observed response categories.\cr
+  \code{"all.prob"} \tab (default) predicted marginal probabilities for all ordered classes of each response.
   }
 
-The current implementation supports only in-sample predictions.
+The current implementation supports only out-of-sample predictions only on a test sample which includes
+columns with observed responses.
 The row names of the output correspond to the subjectIDs.
 }
 \seealso{

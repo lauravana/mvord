@@ -741,7 +741,7 @@ mvord:::check(all.equal(
                                    0.0172638911663273442176347, 0.0094837831334130262561644, 0.0190099916431371585012755,
                                    0.0051418125225030086866695),  tolerance = tolerance))
 
-pmhat_in_mvord2 <- marginal_predict(res_train)
+pmhat_in_mvord2 <- marginal_predict(res_train, type = "prob")
 mvord:::check(all.equal(
   unname(c(pmhat_in_mvord2[1:5,1:2])), c(0.16369555938725077748330, 0.51206442964897258551815, 0.70085752018010938346748,
                                          0.07780827569973108870371, 0.68584056337028265204481, 0.23658538526249328626250,
@@ -765,7 +765,7 @@ mvord:::check(all.equal(
                               0.063146525118494334360975, 0.000117581041524150720079, 0.017153034070206046868279,
                               0.049461049315582095164956),  tolerance = tolerance))
 
-pmhat_new_mvord2 <- marginal_predict(res_train, newdata = dat_test)
+pmhat_new_mvord2 <- marginal_predict(res_train, newdata = dat_test, type = "prob")
 mvord:::check(all.equal(
   unname(c(pmhat_new_mvord2[1:5, 1:2])), c(0.5879858728748059704117, 0.6245339414959365509361, 0.6429603932672183219665,
                                            0.6645168757663386660539, 0.5872139451846044577721, 0.6110788197600012239263,
@@ -793,7 +793,7 @@ mvord:::check(all.equal(
                                    0.0172638911663273442176347, 0.0094837831334130262561644, 0.0190099916431371585012755,
                                    0.0051418125225030086866695),  tolerance = tolerance))
 
-pmhat_in_mvord2 <- marginal_predict(res_train)
+pmhat_in_mvord2 <- marginal_predict(res_train, type = "prob")
 mvord:::check(all.equal(
   unname(c(pmhat_in_mvord2[1:5,1:2])), c(0.16369555938725077748330, 0.51206442964897258551815, 0.70085752018010938346748,
                                          0.07780827569973108870371, 0.68584056337028265204481, 0.23658538526249328626250,
@@ -819,7 +819,8 @@ mvord:::check(all.equal(
                                      0.0560936429791563384572584, 0.0000659201973896017534571, 0.0161492922521473680763648,
                                      0.0556615607647627450016437),  tolerance = tolerance))
 
-pmhat_new_offset_mvord2 <- marginal_predict(res_train2, newdata = dat_test)
+pmhat_new_offset_mvord2 <- marginal_predict(res_train2, newdata = dat_test,
+                                            type = "prob")
 mvord:::check(all.equal(
   unname(c(pmhat_new_offset_mvord2[1:5, 1:2])), c(0.6410297683731078777214, 0.5530240404054447278526, 0.7630836817892157064591,
                                                   0.6103504462453783752096, 0.2985228989322880055468, 0.6269027239883980806567,
@@ -850,7 +851,7 @@ mvord:::check(all.equal(
                                   0.0172638911663273442176347, 0.0094837831334130262561644, 0.0190099916431371585012755,
                                   0.0051418125225030086866695),  tolerance = tolerance))
 
-pmhat_in_mvord <- marginal_predict(res_train)
+pmhat_in_mvord <- marginal_predict(res_train, type = "prob")
 mvord:::check(all.equal(
   unname(c(pmhat_in_mvord[1:5,1:2])), c(0.16369555938725077748330, 0.51206442964897258551815, 0.70085752018010938346748,
                                         0.07780827569973108870371, 0.68584056337028265204481, 0.23658538526249328626250,
@@ -873,7 +874,7 @@ mvord:::check(all.equal(
                              0.063146525118494334360975, 0.000117581041524150720079, 0.017153034070206046868279,
                              0.049461049315582095164956),  tolerance = tolerance))
 
-pmhat_new_mvord <- marginal_predict(res_train, newdata = dat_test)
+pmhat_new_mvord <- marginal_predict(res_train, newdata = dat_test, type = "prob")
 mvord:::check(all.equal(
   unname(c(pmhat_new_mvord[1:5,1:2])),
   c(0.5879858728748059704117, 0.6245339414959365509361, 0.6429603932672183219665,

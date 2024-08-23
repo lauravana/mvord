@@ -1,7 +1,7 @@
 Package: mvord
 Title: Multivariate Ordinal Regression Models
-Version: 1.2.4
-Date: 2024-07-01
+Version: 1.2.5
+Date: 2024-08-26
 Authors@R: c(
     person("Rainer", "Hirk", role = c("aut")),
     person("Kurt", "Hornik", role = c("aut"), 

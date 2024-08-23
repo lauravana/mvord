@@ -1,5 +1,8 @@
 This file documents updates and changes in the package mvord
 
+changes in version 1.2.5 (2024-08-26)
+- added Authors@R
+
 changes in version 1.2.4 (2024-07-01)
 - change handling of data argument to work also with tibbles
 
