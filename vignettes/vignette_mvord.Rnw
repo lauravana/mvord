@@ -1493,15 +1493,15 @@ likelihood information criteria CLAIC and CLBIC.
 
 In addition, joint probabilities can be extracted by the
 \code{predict()} or \code{fitted()} functions:
-<<eval=T>>=
+<<predict_prob, eval=T>>=
 predict(res, subjectID =  1:6)
 @
 as well as joint cumulative probabilities:
-<<eval=T>>=
+<<predict_cumprob, eval=T>>=
 predict(res, type = "cum.prob", subjectID =  1:6)
 @
 and classes:
-<<eval=T>>=
+<<predict_class, eval=T>>=
 predict(res, type = "class", subjectID =  1:6)
 @
 The function \code{marginal_predict()} provides marginal predictions
@@ -1573,7 +1573,6 @@ assigned by raters \code{rater1}, \code{rater2}, \code{rater3} and
 \code{PR}, \code{RSIZE} and \code{BETA} for a cross-section of 690
 firms. A value of \code{NA} indicates a missing observation in the
 corresponding outcome variable.
-%<
 <<eval=T>>=
 data("data_cr", package = "mvord")
 head(data_cr, n = 3)
@@ -1619,7 +1618,7 @@ fitted by:
 res_cor_probit_simple <- mvord(formula = MMO2(rater1, rater2, rater3,
   rater4) ~ 0 + LR + LEV + PR + RSIZE + BETA, data = data_cr)
 @
-<<echo = FALSE, results = hide,eval=T>>=
+<<res_cor_probit_simple, echo = FALSE, results = hide,eval=T>>=
 FILE <- "res_cor_probit_simple.rda"
 if (cache & file.exists(FILE)) {
   load(FILE)
@@ -1639,7 +1638,7 @@ res_cor_probit_simple <- mvord:::reduce_size.mvord(res_cor_probit_simple)
 
 %% Then discuss output
 The results are displayed by the function \code{summary()}:
-<<eval=TRUE>>=
+<<summary_res_cor_probit_simple, eval=TRUE>>=
 summary(res_cor_probit_simple, call = FALSE)
 @
 %
