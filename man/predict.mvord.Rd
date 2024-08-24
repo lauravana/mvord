@@ -35,10 +35,10 @@ Obtains predicted or fitted values for objects of class \code{'mvord'}.
   \code{"class"} \tab combination of response categories with the highest probability. Used as default if newdata contains no column(s) for response variable(s) or all responses are NA.\cr
   \code{"prob"} \tab fitted joint probability for the observed response categories \cr
   \tab or the categories provided in the response column(s) in \code{newdata}. Used as default if newdata contains column(s) for response variable(s).\cr
-  \tab If response column(s) in \code{newdata} contain only NAs or is missing, this type is not supported.
+  \tab If response column(s) in \code{newdata} contain only NAs or is missing, this type is not supported.\cr
   \code{"cum.prob"} \tab fitted joint cumulative probability for the observed response\cr
   \tab categories or the categories provided in the response column(s) in \code{newdata}.\cr
-  \tab If response column(s) in \code{newdata} contain only NAs or is missing, this type is not supported.
+  \tab If response column(s) in \code{newdata} contain only NAs or is missing, this type is not supported.\cr
   }
 If provided, the (row) names of the output correspond to the subjectIDs,
 otherwise they correspond to the row id of the observations.
