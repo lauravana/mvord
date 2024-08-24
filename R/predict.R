@@ -14,30 +14,26 @@
 #' @details The following types can be chosen in \code{marginal_predict}:
 #' \tabular{ll}{
 #'   \code{type} \tab description\cr
-#'   \code{"prob"} \tab  (default)  predicted marginal probabilities for the observed response categories.\cr
+#'   \code{"prob"} \tab  predicted marginal probabilities for the observed response categories. Used as default if newdata contains column(s) for response variable(s).\cr
 #'   \code{"class"} \tab predicted marginal classes of the observed responses.\cr
 #'   \code{"linpred"} \tab predicted linear predictor \cr
 #'   \code{"cum.prob"} \tab predicted marginal cumulative probabilities for the observed response categories.\cr
-#'   \code{"all.prob"} \tab predicted marginal probabilities for all ordered classes of each response. Used as default if newdata contains no column for response.
+#'   \code{"all.prob"} \tab predicted marginal probabilities for all ordered classes of each response. Used as default if newdata contains no column(s) for response variable(s).
 #'   }
 #'
-##' The row names of the output correspond to the subjectIDs.
+##' If provided, the row names of the output correspond to the subjectIDs.
 #' @seealso \code{\link{predict.mvord}}, \code{\link{joint_probabilities}}
 #' @export
 marginal_predict <- function(object, newdata = NULL,
                              type = NULL,
-                             subjectID = NULL, newoffset = NULL, ...){
-  ## NEWDATA is NULL
-  ## newoffset
+                             subjectID = NULL,
+                             newoffset = NULL, ...){
   typearg <- type
   if (is.null(typearg)) type <- "prob"
 
   if(!(type %in% c("prob", "linpred", "class", "cum.prob", "all.prob")))
     stop("Invalid type chosen. Only types 'prob','linpred', 'class', 'cum.prob' and 'all.prob' are available.")
-  #  args <- list(...)
-  #  exist <- "newdata" %in% names(args)
-  # if(!exist) newdata <- NULL
-  # if (!is.null(newdata)) stop("newdata is not supported at the moment!")
+
   if(is.null(newdata)){
     x <- object$rho$x
     y <- object$rho$y
@@ -48,10 +44,12 @@ marginal_predict <- function(object, newdata = NULL,
     x <- tmp$x
     y <- tmp$y
     if (all(is.na(y))) {
+      ## If no response is available in newdata:
       if (is.null(typearg)) {
         message("Setting type default to all.prob")
         type <- "all.prob"
       }
+      ## Also, prob and linpred cannot be computed, as they need a response.
       if (type %in% c("prob", "linpred")) stop("newdata contains no response columns. Only types 'class', 'cum.prob' and 'all.prob' are supported.")
     }
     object$error.struct <- tmp$error.struct
@@ -63,7 +61,6 @@ marginal_predict <- function(object, newdata = NULL,
   }
   sigma <- error_structure(object, type = "sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
-  print(type)
   ##############################################################
   marg_predictions <- switch(type,
                              prob     = marg_pred_prob_fun(object, y, x, offset, stddevs, ind),
@@ -238,6 +235,9 @@ prepare_newdata <- function(object, newdata, newoffset) {
   if (object$rho$function.name == "mvord") {
     if (!all(object$rho$index %in% colnames(newdata)))
       stop("Subject and outcome index do not appear in column names of newdata.")
+    if (!(object$rho$response.name %in% colnames(newdata))) {
+      newdata[, object$rho$response.name] <- NA_integer_
+    }
 
     data.mvord <- mvord_data(newdata, object$rho$index,
                              object$rho$response.name,
@@ -256,8 +256,8 @@ prepare_newdata <- function(object, newdata, newoffset) {
         rhs.form <- as.formula(paste(as.character(object$rho$formula[-2]), collapse = " "))
         new.rhs.form <- update(rhs.form, ~ . + 1)
         tmp <-  suppressWarnings(model.matrix(new.rhs.form,
-                      model.frame(new.rhs.form,  data.mvord$x[[j]], na.action = function(x) x),
-                      contrasts.arg = attr(object, "contrasts")))
+                                              model.frame(new.rhs.form,  data.mvord$x[[j]], na.action = function(x) x),
+                                              contrasts.arg = attr(object, "contrasts")))
         attribute <- attr(tmp, "assign")
         intercept <- ifelse(attr(terms.formula(object$rho$formula), "intercept") == 1, TRUE, FALSE)
         if (intercept == FALSE){
