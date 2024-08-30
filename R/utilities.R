@@ -320,7 +320,8 @@ transf_par <- function(par, rho) {
 
 
   list(U = predu, L = predl, U_univ = predu_univ, L_univ = predl_univ,
-       corr_par = predr)
+       corr_par = predr,
+       beta = par_beta)
 }
 
 transf_par_old <- function(par, rho) {
