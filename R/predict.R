@@ -127,7 +127,9 @@ predict.mvord <- function(object, newdata = NULL, type = NULL,
     offset <- tmp$offset
   }
 
-  if(is.null(subjectID)) ind <- seq_len(nrow(y)) else {
+  if (is.null(subjectID)) {
+    ind <- seq_len(nrow(y)) #if (is.null(rownames(y))) seq_len(nrow(y)) else rownames(y)
+  } else {
     if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
     ind <- match(subjectID, rownames(y))
   }
@@ -161,16 +163,19 @@ predict.mvord <- function(object, newdata = NULL, type = NULL,
 #' The row names of the output correspond to the subjectIDs.
 #' @seealso \code{\link{predict.mvord}}, \code{\link{marginal_predict}}
 #' @export
-joint_probabilities <- function(object, response.cat, newdata = NULL,
-                                type = "prob", subjectID = NULL, newoffset = NULL,...) {
+joint_probabilities <- function(object, response.cat,
+                                newdata = NULL,
+                                type = "prob",
+                                subjectID = NULL,
+                                newoffset = NULL,...) {
   #checks
   if (is.null(object$rho$link$F_multi)) stop("Multivariate probabilities cannot be computed! Try marginal_predict()!")
-  # args <- list(...)
-  # exist <- "newdata" %in% names(args)
-  if(!type %in% c("prob", "cum.prob")) stop("Invalid type chosen. Only types prob and cum.prob are available.")
-  # if(!exist) newdata <- NULL
-  # if (!is.null(newdata)) stop("newdata is not supported at the moment!")
+  if (!type %in% c("prob", "cum.prob")) stop("Invalid type chosen. Only types prob and cum.prob are available.")
   ndim <- object$rho$ndim
+  if (is.vector(response.cat) && length(response.cat) != ndim)
+    stop(sprintf("response.cat must have length equal to %i, the number of outcomes.", ndim))
+
+
   if (is.null(newdata)){
     nobs <- nobs(object)
     x <- object$rho$x
@@ -179,38 +184,42 @@ joint_probabilities <- function(object, response.cat, newdata = NULL,
   } else {
     newdata <- as.data.frame(newdata)
     ## check response.cat
-    if (is.vector(response.cat) && length(response.cat) != ndim)
-      stop("response.cat must have length equal to the number of outcomes.")
     tmp <- prepare_newdata(object, newdata, newoffset)
     x <- tmp$x
     y <- tmp$y
     if (!is.vector(response.cat) && nrow(response.cat) != nrow(y))
       stop("Number of rows of response.cat does not correspond to number of subjects in newdata.")
-
     object$error.struct <- tmp$error.struct
     offset <- tmp$offset
-
-  }
-
-  if (is.null(subjectID)) {
-    ind <- seq_len(nrow(y))
-  } else {
-    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
-    ind <- match(subjectID, rownames(y))
   }
   ## get correlation/covariance matrices
   sigma <- error_structure(object, type ="sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
 
+  ## Filter by subjects
+  if (!is.null(subjectID)) {
+    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+    ind <- match(subjectID, rownames(y))
+    y <- y[ind, , drop=FALSE]
+    x <- lapply(x, function(xx) xx[ind, , drop=FALSE])
+    offset <-  lapply(offset, function(xx) xx[ind])
+    sigma <- sigma[ind]
+    stddevs <- stddevs[ind, , drop = FALSE]
+  }
+
+
+
   if(is.vector(response.cat)) {
-    response.cat <- matrix(response.cat, ncol = length(response.cat), nrow = nrow(y), byrow = TRUE)
+    response.cat <- matrix(response.cat, ncol = length(response.cat),
+                           nrow = nrow(y), byrow = TRUE)
   }
 
   ytmp <- cbind.data.frame(lapply(seq_len(ndim), function(j){
-    if (!all(response.cat[,j] %in% c(NA,levels(y[,j])))) {
-      stop("response.cat are different from the categories in the original data set")
+    if (!all(response.cat[,j] %in% c(NA,object$rho$levels[[j]]))) {
+      stop("response.cat are different from the categories in
+           the original data set")
     } else {
-      ordered(response.cat[,j], levels = levels(y[,j]))
+      ordered(response.cat[,j], levels = object$rho$levels[[j]])
     }
   }))
   Xcat <- make_Xcat(object, ytmp, x)
@@ -233,8 +242,9 @@ joint_probabilities <- function(object, response.cat, newdata = NULL,
                                               ncol = ndim,
                                               nrow = nrow(pred.upper))
   prob <- object$rho$link$F_multi(U = pred.upper, L = pred.lower,
-                                  list_R = lapply(sigma, cov2cor))[ind]
-  names(prob) <- rownames(y)[ind]
+                                  list_R = lapply(sigma, cov2cor))
+  prob[is.nan(prob)] <- 0
+  names(prob) <- rownames(y)
   return(prob)
 }
 
@@ -283,11 +293,13 @@ prepare_newdata <- function(object, newdata, newoffset) {
     # if (is.null(object$rho$index)) stop("Estimated model uses MMO2, newdata is long format.")
     if (!all(object$rho$y.names %in% colnames(newdata))) {
       # stop("Response names in newdata do not match with the outcome names in the estimated model.")
-      y <- matrix(NA, nrow = nrow(newdata), ncol = object$rho$ndim)
+      y <- matrix(NA_integer_, nrow = nrow(newdata), ncol = object$rho$ndim)
+      rownames(y) <- rownames(newdata)
     } else {
       y <- newdata[,object$rho$y.names]
       y <- do.call("cbind.data.frame", lapply(seq_len(ncol(y)), function(j)
         ordered(y[,j], levels = object$rho$levels[[j]])))
+      rownames(y) <- rownames(newdata)
     }
     colnames(y) <- object$rho$y.names
     x <- lapply(seq_len(object$rho$ndim), function(j) {
@@ -327,7 +339,8 @@ prepare_newdata <- function(object, newdata, newoffset) {
       ofs
     })
   }
-  return(list(error.struct = error.struct, y = y, x = x, offset = newoffset))
+  return(list(error.struct = error.struct,
+              y = y, x = x, offset = newoffset))
 }
 
 make_Xcat <- function(object, y, x) {
@@ -498,7 +511,7 @@ pred_class_fun <-  function(object, y, x, offset, stddevs, sigma) {
       ytmp <- cbind.data.frame(
         lapply(seq_len(object$rho$ndim), function(j) {
           ordered(ytmp[,j], levels = object$rho$levels[[j]])
-      }))
+        }))
       Xcat <- make_Xcat(object, ytmp, x)
       pred.upper  <- sapply(seq_len(ndim), function(j) {
         th_u <- c(object$theta[[j]], object$rho$inf.value)[ytmp[, j]]
