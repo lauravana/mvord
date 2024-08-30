@@ -55,19 +55,32 @@ marginal_predict <- function(object, newdata = NULL,
     object$error.struct <- tmp$error.struct
     offset <- tmp$offset
   }
-  if (is.null(subjectID)) ind <- seq_len(NROW(y)) else {
-    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
-    ind <- match(subjectID, rownames(y))
-  }
+
   sigma <- error_structure(object, type = "sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
 
+  ## Filter by subjects
+  # if (is.null(subjectID)) ind <- seq_len(NROW(y)) else {
+  #   if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+  #   ind <- match(subjectID, rownames(y))
+  # }
+  if (!is.null(subjectID)) {
+    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+    ind <- match(subjectID, rownames(y))
+    y <- y[ind, , drop=FALSE]
+    x <- lapply(x, function(xx) xx[ind, , drop=FALSE])
+    offset <-  lapply(offset, function(xx) xx[ind])
+    sigma <- sigma[ind]
+    stddevs <- stddevs[ind, , drop = FALSE]
+  }
+
+
   marg_predictions <- switch(type,
-                             prob     = marg_pred_prob_fun(object, y, x, offset, stddevs, ind),
-                             linpred  = marg_pred_linpred_fun(object, y, x, offset, stddevs, ind),
-                             all.prob = marg_pred_allprob_fun(object, y, x, offset, stddevs, ind),
-                             cum.prob = marg_pred_cumprob_fun(object, y, x, offset, stddevs, ind),
-                             class    = marg_pred_class_fun(object, y, x, offset, stddevs, ind))
+                             prob     = marg_pred_prob_fun(object, y, x, offset, stddevs),
+                             linpred  = marg_pred_linpred_fun(object, y, x, offset, stddevs),
+                             all.prob = marg_pred_allprob_fun(object, y, x, offset, stddevs),
+                             cum.prob = marg_pred_cumprob_fun(object, y, x, offset, stddevs),
+                             class    = marg_pred_class_fun(object, y, x, offset, stddevs))
   return(marg_predictions)
 }
 
@@ -126,21 +139,26 @@ predict.mvord <- function(object, newdata = NULL, type = NULL,
     object$error.struct <- tmp$error.struct
     offset <- tmp$offset
   }
-
-  if (is.null(subjectID)) {
-    ind <- seq_len(nrow(y)) #if (is.null(rownames(y))) seq_len(nrow(y)) else rownames(y)
-  } else {
-    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
-    ind <- match(subjectID, rownames(y))
-  }
   ## get correlation/covariance matrices
   sigma <- error_structure(object, type ="sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
 
+
+  ## Filter by subjects
+  if (!is.null(subjectID)) {
+    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+    ind <- match(subjectID, rownames(y))
+    y <- y[ind, , drop=FALSE]
+    x <- lapply(x, function(xx) xx[ind, , drop=FALSE])
+    offset <-  lapply(offset, function(xx) xx[ind])
+    sigma <- sigma[ind]
+    stddevs <- stddevs[ind, , drop = FALSE]
+  }
+
   predictions <- switch(type,
-                        prob     = pred_prob_fun(object, y, x, offset, stddevs, sigma)[ind],
-                        cum.prob = pred_cumprob_fun(object, y, x, offset, stddevs, sigma)[ind],
-                        class    = pred_class_fun(object, y, x, offset, stddevs, sigma)[ind, ])
+                        prob     = pred_prob_fun(object, y, x, offset, stddevs, sigma),
+                        cum.prob = pred_cumprob_fun(object, y, x, offset, stddevs, sigma),
+                        class    = pred_class_fun(object, y, x, offset, stddevs, sigma))
   return(predictions)
 }
 
@@ -364,8 +382,9 @@ make_Xcat <- function(object, y, x) {
   list(U = XcatU, L = XcatL)
 }
 
-## marginal_predict: type == "linpred"
-marg_pred_linpred_fun <- function(object, y, x, offset, stddevs, ind) {
+
+make_pred_upper_lower <- function(object, y, x, offset, stddevs,
+                                  na.replace = FALSE) {
   Xcat <- make_Xcat(object, y, x)
   betatilde <- bdiag(object$rho$constraints) %*% object$beta
   pred.upper  <- sapply(seq_len(object$rho$ndim), function(j) {
@@ -378,34 +397,32 @@ marg_pred_linpred_fun <- function(object, y, x, offset, stddevs, ind) {
     xbeta_l <- as.double(Xcat$L[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
     th_l - xbeta_l - offset[[j]]
   })/stddevs
-
   colnames(pred.lower) <- colnames(pred.upper) <- object$rho$y.names
-  rownames(pred.lower) <- rownames(pred.upper) <- rownames(y)[ind]
-  return(list(U = pred.upper[ind, ], L = pred.lower[ind, ]))
+  rownames(pred.lower) <- rownames(pred.upper) <- rownames(y)
+  if (na.replace) {
+    pred.upper[is.na(pred.upper)] <-  object$rho$inf.value
+    pred.lower[is.na(pred.lower)] <- -object$rho$inf.value
+  }
+  return(list(pred.lower = pred.lower,
+              pred.upper = pred.upper))
+}
+## marginal_predict: type == "linpred"
+marg_pred_linpred_fun <- function(object, y, x, offset, stddevs) {
+  eta <- make_pred_upper_lower(object, y, x, offset, stddevs)
+  out <- list(U = eta$pred.upper, L = eta$pred.lower)
+  out
 }
 ## marginal_predict: type == "prob"
-marg_pred_prob_fun <- function(object, y, x, offset, stddevs, ind) {
-  Xcat <- make_Xcat(object, y, x)
-  betatilde <- bdiag(object$rho$constraints) %*% object$beta
-  pred.upper  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_u <- c(object$theta[[j]], object$rho$inf.value)[y[, j]]
-    xbeta_u <- as.double(Xcat$U[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_u - xbeta_u - offset[[j]]
-  })/stddevs
-  pred.lower  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_l <- c(-object$rho$inf.value, object$theta[[j]])[y[, j]]
-    xbeta_l <- as.double(Xcat$L[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_l - xbeta_l - offset[[j]]
-  })/stddevs
-  prob <- object$rho$link$F_uni(pred.upper) -
-    object$rho$link$F_uni(pred.lower)
-  prob <- prob[ind, ]
+marg_pred_prob_fun <- function(object, y, x, offset, stddevs) {
+  eta <- make_pred_upper_lower(object, y, x, offset, stddevs)
+  prob <- object$rho$link$F_uni(eta$pred.upper) -
+    object$rho$link$F_uni(eta$pred.lower)
   colnames(prob) <- object$rho$y.names
-  rownames(prob) <- rownames(y)[ind]
+  rownames(prob) <- rownames(y)
   return(prob)
 }
 ## marginal_predict: type == "all.prob"
-marg_pred_allprob_fun <- function(object, y, x, offset, stddevs, ind) {
+marg_pred_allprob_fun <- function(object, y, x, offset, stddevs) {
   betatilde <- bdiag(object$rho$constraints) %*% object$beta
   probs <- lapply(seq_len(object$rho$ndim), function(j){
     pr <- sapply(seq_len(object$rho$ncat[j]), function(k){
@@ -421,22 +438,22 @@ marg_pred_allprob_fun <- function(object, y, x, offset, stddevs, ind) {
       xbeta_l <- as.double(Xcat$L[[1]] %*% betatilde[object$rho$indjbeta[[j]]])
       pred.lower <- (th_l - xbeta_l - offset[[j]])/stddevs[, j]
       object$rho$link$F_uni(pred.upper) - object$rho$link$F_uni(pred.lower)
-    })[ind, ]
+    })
     colnames(pr) <- levels(object$rho$y[, j])
-    rownames(pr) <- rownames(y)[ind]
+    rownames(pr) <- rownames(y)
     pr
   })
   names(probs) <- object$rho$y.names
   return(probs)
 }
-marg_pred_cumprob_fun <-  function(object, y, x, offset, stddevs, ind) {
-  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs, ind)
+marg_pred_cumprob_fun <-  function(object, y, x, offset, stddevs) {
+  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs)
   cum.probs <- lapply(probs, function(x) t(apply(x, 1, cumsum)))
   return(cum.probs)
 }
 
-marg_pred_class_fun <-  function(object, y, x, offset, stddevs, ind) {
-  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs, ind)
+marg_pred_class_fun <-  function(object, y, x, offset, stddevs) {
+  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs)
   y.ord <- as.data.frame(sapply(seq_along(probs), function(j){
     apply(probs[[j]], 1, function(i) {
       class.max <- object$rho$levels[[j]][which.max(i)]
@@ -446,26 +463,14 @@ marg_pred_class_fun <-  function(object, y, x, offset, stddevs, ind) {
   for (j in seq_along(object$rho$levels))
     y.ord[,j] <- ordered(y.ord[, j], levels = object$rho$levels[[j]])
   colnames(y.ord) <- object$rho$y.names
-  return(y.ord[ind, ])
+  return(y.ord)
 }
 
 pred_prob_fun <- function(object, y, x, offset, stddevs, sigma) {
-  Xcat <- make_Xcat(object, y, x)
-  betatilde <- bdiag(object$rho$constraints) %*% object$beta
-  pred.upper  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_u <- c(object$theta[[j]], object$rho$inf.value)[y[, j]]
-    xbeta_u <- as.double(Xcat$U[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_u - xbeta_u - offset[[j]]
-  })/stddevs
-  pred.lower  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_l <- c(-object$rho$inf.value, object$theta[[j]])[y[, j]]
-    xbeta_l <- as.double(Xcat$L[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_l - xbeta_l - offset[[j]]
-  })/stddevs
-  pred.upper[is.na(pred.upper)] <- object$rho$inf.value
-  pred.lower[is.na(pred.lower)] <- -object$rho$inf.value
+  eta <- make_pred_upper_lower(object, y, x, offset, stddevs,
+                               na.replace = TRUE)
   prob <- object$rho$link$F_multi(
-    U = pred.upper, L = pred.lower,
+    U = eta$pred.upper, L = eta$pred.lower,
     list_R = lapply(sigma, cov2cor))
   names(prob) <- rownames(y)
   return(prob)
