@@ -24,7 +24,7 @@ variables used to fit the model. By default the data on which the model was esti
 
 \item{type}{\code{"prob"} for joint probabilities and \code{"cum.prob"} for joint cumulative probabilities.}
 
-\item{subjectID}{(optional) vector specifying for which subjectIDs the predictions\cr or fitted values should be computed.}
+\item{subjectID}{(optional) vector specifying for which subjectIDs the predictions\cr should be computed.}
 
 \item{newoffset}{(optional) list of length equal to the number of outcomes, each element containing a vector of offsets to be considered.}
 
