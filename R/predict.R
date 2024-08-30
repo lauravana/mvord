@@ -162,22 +162,29 @@ predict.mvord <- function(object, newdata = NULL, type = NULL,
   return(predictions)
 }
 
-#' @title Extracts fitted Probabilities for Multivariate Ordinal Regression Models.
+#' @title Fitted probabilities for multivariate ordinal regression models for given response categories.
 #'
 #' @description
-#' Extracts fitted probabilities for given response categories from a fitted model of class \code{'mvord'}.
+#' Extracts fitted probabilities for given combination of response categories from a fitted model of class \code{'mvord'}.
 #' @param object an object of class \code{'mvord'}.
-#' @param response.cat vector or matrix with response categories (for each subject one row of length equal to the number of multiple measurements).
-#' @param newdata (optional) data frame of new covariates and new responses. The names of the variables should correspond to the names of the
+#' @param response.cat vector or matrix with response categories (for each subject, one row of length equal to the number of multiple measurements).
+#' @param newdata (optional) data frame of new covariates. The names of the variables should correspond to the names of the
 #'  variables used to fit the model. By default the data on which the model was estimated is considered.
 #' @param type \code{"prob"} for joint probabilities and \code{"cum.prob"} for joint cumulative probabilities.
 #' @param subjectID (optional) vector specifying for which subjectIDs the predictions\cr or fitted values should be computed.
 #' @param newoffset (optional) list of length equal to the number of outcomes, each element containing a vector of offsets to be considered.
 #' @param ... further arguments passed to or from other methods.
 #' @details
-# #' \code{newdata} has to be in the same data format as in the fitted object of class \code{'mvord'}.
+#' The function provides a convenient way to extract probabilities for a given combination of response
+#' categories, given a set of covariates. The results obtained are the same as the ones by \code{predict()}
+#' with \code{type = "prob"} or \code{type = "cum.prob"}. The difference is that in \code{joint_probabilities()},
+#' for the same set of covariates, only the  \code{response.cat} argument must be changed to obtain predictions for new classes.
+#' In \code{predict()}, one would need to reconstruct a new data frame \code{newdata} everytime a new response combination should be
+#' investigated.
 #'
-##' The current implementation supports only in-sample predictions.
+#' From \code{newdata} only the columns corresponding to the covariates will be considered. Any columns corresponding to the
+#' responses will be ignored.
+#'
 #' The row names of the output correspond to the subjectIDs.
 #' @seealso \code{\link{predict.mvord}}, \code{\link{marginal_predict}}
 #' @export
@@ -187,6 +194,7 @@ joint_probabilities <- function(object, response.cat,
                                 subjectID = NULL,
                                 newoffset = NULL,...) {
   #checks
+  if (missing(response.cat)) stop("response.cat not provided. Use predict() instead.")
   if (is.null(object$rho$link$F_multi)) stop("Multivariate probabilities cannot be computed! Try marginal_predict()!")
   if (!type %in% c("prob", "cum.prob")) stop("Invalid type chosen. Only types prob and cum.prob are available.")
   ndim <- object$rho$ndim
