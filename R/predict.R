@@ -171,7 +171,7 @@ predict.mvord <- function(object, newdata = NULL, type = NULL,
 #' @param newdata (optional) data frame of new covariates. The names of the variables should correspond to the names of the
 #'  variables used to fit the model. By default the data on which the model was estimated is considered.
 #' @param type \code{"prob"} for joint probabilities and \code{"cum.prob"} for joint cumulative probabilities.
-#' @param subjectID (optional) vector specifying for which subjectIDs the predictions\cr or fitted values should be computed.
+#' @param subjectID (optional) vector specifying for which subjectIDs the predictions\cr should be computed.
 #' @param newoffset (optional) list of length equal to the number of outcomes, each element containing a vector of offsets to be considered.
 #' @param ... further arguments passed to or from other methods.
 #' @details
