@@ -3,7 +3,7 @@
 #' @description
 #' Obtains marginal predictions/fitted measures for objects of class \code{'mvord'}.
 #' @param object an object of class \code{'mvord'}.
-#' @param type types \code{"prob"}, \code{"class"}, \code{"linpred"}, \code{"pred"}, \code{"cum.prob"} are available.
+#' @param type types \code{"prob"}, \code{"class"}, \code{"linpred"}, \code{"cum.prob"},  \code{"all.prob"} are available.
 #' @param newdata (optional) data frame of new covariates and new responses.
 #' The names of the variables should correspond to the names of the
 #'  variables used to fit the model. By default the data on which the model
@@ -14,25 +14,26 @@
 #' @details The following types can be chosen in \code{marginal_predict}:
 #' \tabular{ll}{
 #'   \code{type} \tab description\cr
-#'   \code{"prob"} \tab (default) fitted marginal probabilities for the observed response categories.\cr
-#'   \code{"class"} \tab fitted marginal classes of the observed responses.\cr
-#'   \code{"linpred"} \tab linear predictor \cr
-#'   \code{"cum.prob"} \tab fitted marginal cumulative probabilities for the observed response categories.\cr
-#'   \code{"all.prob"} \tab fitted marginal probabilities for all ordered classes of each response.
+#'   \code{"prob"} \tab  predicted marginal probabilities for the observed response categories. Used as default if newdata contains column(s) for response variable(s).\cr
+#'   \code{"class"} \tab predicted marginal classes of the observed responses.\cr
+#'   \code{"linpred"} \tab predicted linear predictor \cr
+#'   \code{"cum.prob"} \tab predicted marginal cumulative probabilities for the observed response categories.\cr
+#'   \code{"all.prob"} \tab predicted marginal probabilities for all ordered classes of each response. Used as default if newdata contains no column(s) for response variable(s).
 #'   }
 #'
-##' The current implementation supports only in-sample predictions.
-##' The row names of the output correspond to the subjectIDs.
+##' If provided, the row names of the output correspond to the subjectIDs, otherwise they correspond to the row id of the observations.
 #' @seealso \code{\link{predict.mvord}}, \code{\link{joint_probabilities}}
 #' @export
-marginal_predict <- function(object, newdata = NULL, type = "prob", subjectID = NULL, newoffset = NULL, ...){
-  #NEWDATA is NULL
-  ## newoffset
-  if(!(type %in% c("prob", "linpred", "class", "cum.prob", "all.prob"))) stop("Invalid type chosen. Only types 'prob','linpred', 'class', 'cum.prob' and 'all.prob' are available.")
-  #  args <- list(...)
-  #  exist <- "newdata" %in% names(args)
-  # if(!exist) newdata <- NULL
-  # if (!is.null(newdata)) stop("newdata is not supported at the moment!")
+marginal_predict <- function(object, newdata = NULL,
+                             type = NULL,
+                             subjectID = NULL,
+                             newoffset = NULL, ...){
+  typearg <- type
+  if (is.null(typearg)) type <- "prob"
+
+  if(!(type %in% c("prob", "linpred", "class", "cum.prob", "all.prob")))
+    stop("Invalid type chosen. Only types 'prob','linpred', 'class', 'cum.prob' and 'all.prob' are available.")
+
   if(is.null(newdata)){
     x <- object$rho$x
     y <- object$rho$y
@@ -42,22 +43,44 @@ marginal_predict <- function(object, newdata = NULL, type = "prob", subjectID = 
     tmp <- prepare_newdata(object, newdata, newoffset)
     x <- tmp$x
     y <- tmp$y
+    if (all(is.na(y))) {
+      ## If no response is available in newdata:
+      if (is.null(typearg)) {
+        message("Setting type default to all.prob")
+        type <- "all.prob"
+      }
+      ## Also, prob and linpred cannot be computed, as they need a response.
+      if (type %in% c("prob", "linpred")) stop("newdata contains no response columns. Only types 'class', 'cum.prob' and 'all.prob' are supported.")
+    }
     object$error.struct <- tmp$error.struct
     offset <- tmp$offset
   }
-  if (is.null(subjectID)) ind <- seq_len(NROW(y)) else {
-    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
-    ind <- match(subjectID, rownames(y))
-  }
+
   sigma <- error_structure(object, type = "sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
-  ##############################################################
+
+  ## Filter by subjects
+  # if (is.null(subjectID)) ind <- seq_len(NROW(y)) else {
+  #   if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+  #   ind <- match(subjectID, rownames(y))
+  # }
+  if (!is.null(subjectID)) {
+    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+    ind <- match(subjectID, rownames(y))
+    y <- y[ind, , drop=FALSE]
+    x <- lapply(x, function(xx) xx[ind, , drop=FALSE])
+    offset <-  lapply(offset, function(xx) xx[ind])
+    sigma <- sigma[ind]
+    stddevs <- stddevs[ind, , drop = FALSE]
+  }
+
+
   marg_predictions <- switch(type,
-                             prob     = marg_pred_prob_fun(object, y, x, offset, stddevs, ind),
-                             linpred  = marg_pred_linpred_fun(object, y, x, offset, stddevs, ind),
-                             all.prob = marg_pred_allprob_fun(object, y, x, offset, stddevs, ind),
-                             cum.prob = marg_pred_cumprob_fun(object, y, x, offset, stddevs, ind),
-                             class    = marg_pred_class_fun(object, y, x, offset, stddevs, ind))
+                             prob     = marg_pred_prob_fun(object, y, x, offset, stddevs),
+                             linpred  = marg_pred_linpred_fun(object, y, x, offset, stddevs),
+                             all.prob = marg_pred_allprob_fun(object, y, x, offset, stddevs),
+                             cum.prob = marg_pred_cumprob_fun(object, y, x, offset, stddevs),
+                             class    = marg_pred_class_fun(object, y, x, offset, stddevs))
   return(marg_predictions)
 }
 
@@ -73,29 +96,28 @@ marginal_predict <- function(object, newdata = NULL, type = "prob", subjectID = 
 #' @details
 #' \tabular{ll}{
 #'   \code{type} \tab description\cr
-#'   \code{"class"} \tab combination of response categories with the highest probability.\cr
-#'   \code{"prob"} \tab (default) fitted joint probability for the observed response categories\cr
-#'   \tab or the categories provided in the response column(s) in \code{newdata}.\cr
-#'   \tab If response column(s) in
-#'        \code{newdata} contain only NAs, this will return a vector of ones. \cr
+#'   \code{"class"} \tab combination of response categories with the highest probability. Used as default if newdata contains no column(s) for response variable(s) or all responses are NA.\cr
+#'   \code{"prob"} \tab fitted joint probability for the observed response categories \cr
+#'   \tab or the categories provided in the response column(s) in \code{newdata}. Used as default if newdata contains column(s) for response variable(s).\cr
+#'   \tab If response column(s) in \code{newdata} contain only NAs or is missing, this type is not supported.\cr
 #'   \code{"cum.prob"} \tab fitted joint cumulative probability for the observed response\cr
 #'   \tab categories or the categories provided in the response column(s) in \code{newdata}.\cr
-#'   \tab If response column(s) in \code{newdata} contain only NAs, this will return a vector of ones.
+#'   \tab If response column(s) in \code{newdata} contain only NAs or is missing, this type is not supported.\cr
 #'   }
-# #'   The current implementation supports only in-sample predictions.
-#' The (row) names of the output correspond to the subjectIDs.
+#' If provided, the (row) names of the output correspond to the subjectIDs,
+#' otherwise they correspond to the row id of the observations.
 #' @seealso \code{\link{marginal_predict}}, \code{\link{joint_probabilities}}
 #' @method predict mvord
 #' @export
-predict.mvord <- function(object, newdata = NULL, type = "prob", subjectID = NULL, newoffset = NULL, ...){
+predict.mvord <- function(object, newdata = NULL, type = NULL,
+                          subjectID = NULL, newoffset = NULL, ...){
+  typearg <- type
+  if (is.null(typearg)) type <- "prob"
+
   # checks
   if (is.null(object$rho$link$F_multi)) stop("Multivariate probabilities cannot be computed! Try marginal_predict()!")
   if(!(type %in% c("prob", "class", "cum.prob")))  stop("Invalid type chosen. Only types 'prob', 'class' and 'cum.prob' are available.")
-  #NEWDATA is NULL
-  #args <- list(...)
-  #exist <- "newdata" %in% names(args)
-  #if(!exist) newdata <- NULL
-  #if (!is.null(newdata)) stop("newdata is not supported at the moment!")
+
   if(is.null(newdata)){
     x <- object$rho$x
     y <- object$rho$y
@@ -105,54 +127,81 @@ predict.mvord <- function(object, newdata = NULL, type = "prob", subjectID = NUL
     tmp <- prepare_newdata(object, newdata, newoffset)
     x <- tmp$x
     y <- tmp$y
+    if (all(is.na(y))) {
+      ## If no response is available in newdata:
+      if (is.null(typearg)) {
+        message("Setting type default to class")
+        type <- "class"
+      }
+      ## Also, prob and linpred cannot be computed, as they need a response.
+      if (type %in% c("prob", "cum.prob")) stop("newdata contains no response columns. Only type 'class' is supported.")
+    }
     object$error.struct <- tmp$error.struct
     offset <- tmp$offset
-  }
-
-  if(is.null(subjectID)) ind <- seq_len(nrow(y)) else {
-    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
-    ind <- match(subjectID, rownames(y))
   }
   ## get correlation/covariance matrices
   sigma <- error_structure(object, type ="sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
-  ##############################################################
+
+
+  ## Filter by subjects
+  if (!is.null(subjectID)) {
+    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+    ind <- match(subjectID, rownames(y))
+    y <- y[ind, , drop=FALSE]
+    x <- lapply(x, function(xx) xx[ind, , drop=FALSE])
+    offset <-  lapply(offset, function(xx) xx[ind])
+    sigma <- sigma[ind]
+    stddevs <- stddevs[ind, , drop = FALSE]
+  }
+
   predictions <- switch(type,
-                        prob     = pred_prob_fun(object, y, x, offset, stddevs, sigma)[ind],
-                        cum.prob = pred_cumprob_fun(object, y, x, offset, stddevs, sigma)[ind],
-                        class    = pred_class_fun(object, y, x, offset, stddevs, sigma)[ind, ])
+                        prob     = pred_prob_fun(object, y, x, offset, stddevs, sigma),
+                        cum.prob = pred_cumprob_fun(object, y, x, offset, stddevs, sigma),
+                        class    = pred_class_fun(object, y, x, offset, stddevs, sigma))
   return(predictions)
 }
 
-#' @title Extracts fitted Probabilities for Multivariate Ordinal Regression Models.
+#' @title Fitted probabilities for multivariate ordinal regression models for given response categories.
 #'
 #' @description
-#' Extracts fitted probabilities for given response categories from a fitted model of class \code{'mvord'}.
+#' Extracts fitted probabilities for given combination of response categories from a fitted model of class \code{'mvord'}.
 #' @param object an object of class \code{'mvord'}.
-#' @param response.cat vector or matrix with response categories (for each subject one row of length equal to the number of multiple measurements).
-#' @param newdata (optional) data frame of new covariates and new responses. The names of the variables should correspond to the names of the
+#' @param response.cat vector or matrix with response categories (for each subject, one row of length equal to the number of multiple measurements).
+#' @param newdata (optional) data frame of new covariates. The names of the variables should correspond to the names of the
 #'  variables used to fit the model. By default the data on which the model was estimated is considered.
 #' @param type \code{"prob"} for joint probabilities and \code{"cum.prob"} for joint cumulative probabilities.
-#' @param subjectID (optional) vector specifying for which subjectIDs the predictions\cr or fitted values should be computed.
+#' @param subjectID (optional) vector specifying for which subjectIDs the predictions\cr should be computed.
 #' @param newoffset (optional) list of length equal to the number of outcomes, each element containing a vector of offsets to be considered.
 #' @param ... further arguments passed to or from other methods.
 #' @details
-# #' \code{newdata} has to be in the same data format as in the fitted object of class \code{'mvord'}.
+#' The function provides a convenient way to extract probabilities for a given combination of response
+#' categories, given a set of covariates. The results obtained are the same as the ones by \code{predict()}
+#' with \code{type = "prob"} or \code{type = "cum.prob"}. The difference is that in \code{joint_probabilities()},
+#' for the same set of covariates, only the  \code{response.cat} argument must be changed to obtain predictions for new classes.
+#' In \code{predict()}, one would need to reconstruct a new data frame \code{newdata} everytime a new response combination should be
+#' investigated.
 #'
-##' The current implementation supports only in-sample predictions.
+#' From \code{newdata} only the columns corresponding to the covariates will be considered. Any columns corresponding to the
+#' responses will be ignored.
+#'
 #' The row names of the output correspond to the subjectIDs.
 #' @seealso \code{\link{predict.mvord}}, \code{\link{marginal_predict}}
 #' @export
-joint_probabilities <- function(object, response.cat, newdata = NULL, 
-                                type = "prob", subjectID = NULL, newoffset = NULL,...) {
+joint_probabilities <- function(object, response.cat,
+                                newdata = NULL,
+                                type = "prob",
+                                subjectID = NULL,
+                                newoffset = NULL,...) {
   #checks
+  if (missing(response.cat)) stop("response.cat not provided. Use predict() instead.")
   if (is.null(object$rho$link$F_multi)) stop("Multivariate probabilities cannot be computed! Try marginal_predict()!")
-  # args <- list(...)
-  # exist <- "newdata" %in% names(args)
-  if(!type %in% c("prob", "cum.prob")) stop("Invalid type chosen. Only types prob and cum.prob are available.")
-  # if(!exist) newdata <- NULL
-  # if (!is.null(newdata)) stop("newdata is not supported at the moment!")
+  if (!type %in% c("prob", "cum.prob")) stop("Invalid type chosen. Only types prob and cum.prob are available.")
   ndim <- object$rho$ndim
+  if (is.vector(response.cat) && length(response.cat) != ndim)
+    stop(sprintf("response.cat must have length equal to %i, the number of outcomes.", ndim))
+
+
   if (is.null(newdata)){
     nobs <- nobs(object)
     x <- object$rho$x
@@ -161,38 +210,44 @@ joint_probabilities <- function(object, response.cat, newdata = NULL,
   } else {
     newdata <- as.data.frame(newdata)
     ## check response.cat
-    if (is.vector(response.cat) && length(response.cat) != ndim)
-      stop("response.cat must have length equal to the number of outcomes.")
     tmp <- prepare_newdata(object, newdata, newoffset)
     x <- tmp$x
     y <- tmp$y
     if (!is.vector(response.cat) && nrow(response.cat) != nrow(y))
       stop("Number of rows of response.cat does not correspond to number of subjects in newdata.")
-
     object$error.struct <- tmp$error.struct
     offset <- tmp$offset
-
   }
-
-  if (is.null(subjectID)) {
-    ind <- seq_len(nrow(y))
-  } else {
-    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
-    ind <- match(subjectID, rownames(y))
+  if(is.vector(response.cat)) {
+    response.cat <- matrix(response.cat, ncol = length(response.cat),
+                           nrow = nrow(y), byrow = TRUE)
   }
   ## get correlation/covariance matrices
   sigma <- error_structure(object, type ="sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
-  ###################################################
-  if(is.vector(response.cat)) {
-    response.cat <- matrix(response.cat, ncol = length(response.cat), nrow = nrow(y), byrow = TRUE)
+
+  ## Filter by subjects
+  if (!is.null(subjectID)) {
+    if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
+    ind <- match(subjectID, rownames(y))
+    y <- y[ind, , drop=FALSE]
+    x <- lapply(x, function(xx) xx[ind, , drop = FALSE])
+    offset <-  lapply(offset, function(xx) xx[ind])
+    sigma <- sigma[ind]
+    stddevs <- stddevs[ind, , drop = FALSE]
+    response.cat <- response.cat[ind, , drop = FALSE]
   }
 
+
+
+
+
   ytmp <- cbind.data.frame(lapply(seq_len(ndim), function(j){
-    if (!all(response.cat[,j] %in% c(NA,levels(y[,j])))) {
-      stop("response.cat are different from the categories in the original data set")
+    if (!all(response.cat[,j] %in% c(NA,object$rho$levels[[j]]))) {
+      stop("response.cat are different from the categories in
+           the original data set")
     } else {
-      ordered(response.cat[,j], levels = levels(y[,j]))
+      ordered(response.cat[,j], levels = object$rho$levels[[j]])
     }
   }))
   Xcat <- make_Xcat(object, ytmp, x)
@@ -210,13 +265,14 @@ joint_probabilities <- function(object, response.cat, newdata = NULL,
   })/stddevs
   pred.lower[is.na(pred.lower)] <- -object$rho$inf.value
   pred.upper[is.na(pred.upper)] <- object$rho$inf.value
-  #################################
-  
+
   if(type == "cum.prob") pred.lower <- matrix(-object$rho$inf.value,
-                                              ncol = ndim, nrow = nrow(pred.upper))
+                                              ncol = ndim,
+                                              nrow = nrow(pred.upper))
   prob <- object$rho$link$F_multi(U = pred.upper, L = pred.lower,
-                                  list_R = lapply(sigma, cov2cor))[ind]
-  names(prob) <- rownames(y)[ind]
+                                  list_R = lapply(sigma, cov2cor))
+  prob[is.nan(prob)] <- 0
+  names(prob) <- rownames(y)
   return(prob)
 }
 
@@ -225,6 +281,9 @@ prepare_newdata <- function(object, newdata, newoffset) {
   if (object$rho$function.name == "mvord") {
     if (!all(object$rho$index %in% colnames(newdata)))
       stop("Subject and outcome index do not appear in column names of newdata.")
+    if (!(object$rho$response.name %in% colnames(newdata))) {
+      newdata[, object$rho$response.name] <- NA_integer_
+    }
 
     data.mvord <- mvord_data(newdata, object$rho$index,
                              object$rho$response.name,
@@ -243,8 +302,8 @@ prepare_newdata <- function(object, newdata, newoffset) {
         rhs.form <- as.formula(paste(as.character(object$rho$formula[-2]), collapse = " "))
         new.rhs.form <- update(rhs.form, ~ . + 1)
         tmp <-  suppressWarnings(model.matrix(new.rhs.form,
-                      model.frame(new.rhs.form,  data.mvord$x[[j]], na.action = function(x) x),
-                      contrasts.arg = attr(object, "contrasts")))
+                                              model.frame(new.rhs.form,  data.mvord$x[[j]], na.action = function(x) x),
+                                              contrasts.arg = attr(object, "contrasts")))
         attribute <- attr(tmp, "assign")
         intercept <- ifelse(attr(terms.formula(object$rho$formula), "intercept") == 1, TRUE, FALSE)
         if (intercept == FALSE){
@@ -260,11 +319,16 @@ prepare_newdata <- function(object, newdata, newoffset) {
     error.struct <- init_fun(object$error.struct, data.mvord, attr(object, "contrasts"))
   } else {
     # if (is.null(object$rho$index)) stop("Estimated model uses MMO2, newdata is long format.")
-    if (!all(object$rho$y.names %in% colnames(newdata)))
-      stop("Response names in newdata do not match with the outcome names in the estimated model.")
-    y <- newdata[,object$rho$y.names]
-    y <- do.call("cbind.data.frame", lapply(seq_len(ncol(y)), function(j)
-      ordered(y[,j], levels = object$rho$levels[[j]])))
+    if (!all(object$rho$y.names %in% colnames(newdata))) {
+      # stop("Response names in newdata do not match with the outcome names in the estimated model.")
+      y <- matrix(NA_integer_, nrow = nrow(newdata), ncol = object$rho$ndim)
+      rownames(y) <- rownames(newdata)
+    } else {
+      y <- newdata[,object$rho$y.names]
+      y <- do.call("cbind.data.frame", lapply(seq_len(ncol(y)), function(j)
+        ordered(y[,j], levels = object$rho$levels[[j]])))
+      rownames(y) <- rownames(newdata)
+    }
     colnames(y) <- object$rho$y.names
     x <- lapply(seq_len(object$rho$ndim), function(j) {
       rhs.form <- as.formula(paste(as.character(object$rho$formula[-2]), collapse = " "))
@@ -303,7 +367,8 @@ prepare_newdata <- function(object, newdata, newoffset) {
       ofs
     })
   }
-  return(list(error.struct = error.struct, y = y, x = x, offset = newoffset))
+  return(list(error.struct = error.struct,
+              y = y, x = x, offset = newoffset))
 }
 
 make_Xcat <- function(object, y, x) {
@@ -327,8 +392,9 @@ make_Xcat <- function(object, y, x) {
   list(U = XcatU, L = XcatL)
 }
 
-## marginal_predict: type == "linpred"
-marg_pred_linpred_fun <- function(object, y, x, offset, stddevs, ind) {
+
+make_pred_upper_lower <- function(object, y, x, offset, stddevs,
+                                  na.replace = FALSE) {
   Xcat <- make_Xcat(object, y, x)
   betatilde <- bdiag(object$rho$constraints) %*% object$beta
   pred.upper  <- sapply(seq_len(object$rho$ndim), function(j) {
@@ -341,39 +407,38 @@ marg_pred_linpred_fun <- function(object, y, x, offset, stddevs, ind) {
     xbeta_l <- as.double(Xcat$L[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
     th_l - xbeta_l - offset[[j]]
   })/stddevs
-
   colnames(pred.lower) <- colnames(pred.upper) <- object$rho$y.names
-  rownames(pred.lower) <- rownames(pred.upper) <- rownames(y)[ind]
-  return(list(U = pred.upper[ind, ], L = pred.lower[ind, ]))
+  rownames(pred.lower) <- rownames(pred.upper) <- rownames(y)
+  if (na.replace) {
+    pred.upper[is.na(pred.upper)] <-  object$rho$inf.value
+    pred.lower[is.na(pred.lower)] <- -object$rho$inf.value
+  }
+  return(list(pred.lower = pred.lower,
+              pred.upper = pred.upper))
+}
+## marginal_predict: type == "linpred"
+marg_pred_linpred_fun <- function(object, y, x, offset, stddevs) {
+  eta <- make_pred_upper_lower(object, y, x, offset, stddevs)
+  out <- list(U = eta$pred.upper, L = eta$pred.lower)
+  out
 }
 ## marginal_predict: type == "prob"
-marg_pred_prob_fun <- function(object, y, x, offset, stddevs, ind) {
-  Xcat <- make_Xcat(object, y, x)
-  betatilde <- bdiag(object$rho$constraints) %*% object$beta
-  pred.upper  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_u <- c(object$theta[[j]], object$rho$inf.value)[y[, j]]
-    xbeta_u <- as.double(Xcat$U[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_u - xbeta_u - offset[[j]]
-  })/stddevs
-  pred.lower  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_l <- c(-object$rho$inf.value, object$theta[[j]])[y[, j]]
-    xbeta_l <- as.double(Xcat$L[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_l - xbeta_l - offset[[j]]
-  })/stddevs
-  prob <- object$rho$link$F_uni(pred.upper) -
-    object$rho$link$F_uni(pred.lower)
-  prob <- prob[ind, ]
+marg_pred_prob_fun <- function(object, y, x, offset, stddevs) {
+  eta <- make_pred_upper_lower(object, y, x, offset, stddevs)
+  prob <- object$rho$link$F_uni(eta$pred.upper) -
+    object$rho$link$F_uni(eta$pred.lower)
   colnames(prob) <- object$rho$y.names
-  rownames(prob) <- rownames(y)[ind]
+  rownames(prob) <- rownames(y)
   return(prob)
 }
 ## marginal_predict: type == "all.prob"
-marg_pred_allprob_fun <- function(object, y, x, offset, stddevs, ind) {
+marg_pred_allprob_fun <- function(object, y, x, offset, stddevs) {
   betatilde <- bdiag(object$rho$constraints) %*% object$beta
   probs <- lapply(seq_len(object$rho$ndim), function(j){
     pr <- sapply(seq_len(object$rho$ncat[j]), function(k){
       ytmp <- y[,j]
-      ytmp[seq_along(ytmp)] <- levels(ytmp)[k]
+      ytmp[seq_along(ytmp)] <- object$rho$levels[[j]][k]
+      ytmp <- ordered(ytmp, levels = object$rho$levels[[j]])
       dim(ytmp)  <- c(length(ytmp),1)
       Xcat <- make_Xcat(object, ytmp, x[j])
       th_u <- c(object$theta[[j]], object$rho$inf.value)[ytmp[, 1]]
@@ -383,22 +448,22 @@ marg_pred_allprob_fun <- function(object, y, x, offset, stddevs, ind) {
       xbeta_l <- as.double(Xcat$L[[1]] %*% betatilde[object$rho$indjbeta[[j]]])
       pred.lower <- (th_l - xbeta_l - offset[[j]])/stddevs[, j]
       object$rho$link$F_uni(pred.upper) - object$rho$link$F_uni(pred.lower)
-    })[ind, ]
+    })
     colnames(pr) <- levels(object$rho$y[, j])
-    rownames(pr) <- rownames(y)[ind]
+    rownames(pr) <- rownames(y)
     pr
   })
   names(probs) <- object$rho$y.names
   return(probs)
 }
-marg_pred_cumprob_fun <-  function(object, y, x, offset, stddevs, ind) {
-  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs, ind)
+marg_pred_cumprob_fun <-  function(object, y, x, offset, stddevs) {
+  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs)
   cum.probs <- lapply(probs, function(x) t(apply(x, 1, cumsum)))
   return(cum.probs)
 }
 
-marg_pred_class_fun <-  function(object, y, x, offset, stddevs, ind) {
-  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs, ind)
+marg_pred_class_fun <-  function(object, y, x, offset, stddevs) {
+  probs <- marg_pred_allprob_fun(object, y, x, offset, stddevs)
   y.ord <- as.data.frame(sapply(seq_along(probs), function(j){
     apply(probs[[j]], 1, function(i) {
       class.max <- object$rho$levels[[j]][which.max(i)]
@@ -408,30 +473,19 @@ marg_pred_class_fun <-  function(object, y, x, offset, stddevs, ind) {
   for (j in seq_along(object$rho$levels))
     y.ord[,j] <- ordered(y.ord[, j], levels = object$rho$levels[[j]])
   colnames(y.ord) <- object$rho$y.names
-  return(y.ord[ind, ])
+  return(y.ord)
 }
-###############################
+
 pred_prob_fun <- function(object, y, x, offset, stddevs, sigma) {
-  Xcat <- make_Xcat(object, y, x)
-  betatilde <- bdiag(object$rho$constraints) %*% object$beta
-  pred.upper  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_u <- c(object$theta[[j]], object$rho$inf.value)[y[, j]]
-    xbeta_u <- as.double(Xcat$U[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_u - xbeta_u - offset[[j]]
-  })/stddevs
-  pred.lower  <- sapply(seq_len(object$rho$ndim), function(j) {
-    th_l <- c(-object$rho$inf.value, object$theta[[j]])[y[, j]]
-    xbeta_l <- as.double(Xcat$L[[j]] %*% betatilde[object$rho$indjbeta[[j]]])
-    th_l - xbeta_l - offset[[j]]
-  })/stddevs
-  pred.upper[is.na(pred.upper)] <- object$rho$inf.value
-  pred.lower[is.na(pred.lower)] <- -object$rho$inf.value
+  eta <- make_pred_upper_lower(object, y, x, offset, stddevs,
+                               na.replace = TRUE)
   prob <- object$rho$link$F_multi(
-    U = pred.upper, L = pred.lower,
+    U = eta$pred.upper, L = eta$pred.lower,
     list_R = lapply(sigma, cov2cor))
   names(prob) <- rownames(y)
   return(prob)
 }
+
 pred_cumprob_fun <-  function(object, y, x, offset, stddevs, sigma) {
   Xcat <- make_Xcat(object, y, x)
   betatilde <- bdiag(object$rho$constraints) %*% object$beta
@@ -459,15 +513,20 @@ pred_class_fun <-  function(object, y, x, offset, stddevs, sigma) {
     cmbn <- expand.grid(lapply(object$rho$ncat, seq_len))
     cmbn.labels <- expand.grid(object$rho$levels)
     probs <- sapply(seq_len(nrow(cmbn)), function(i){
-      if (i %% 100 == 0)  cat('Computed probabilities for', i, 'out of', nrow(cmbn),'combinations\n')
-      ###############################################
+      print(i)
+      if (i %% 100 == 0)  cat('Computed probabilities for', i, 'out of',
+                              nrow(cmbn),'combinations\n')
       ytmp <- sapply(seq_len(ndim),
                      function(j) object$rho$levels[[j]][cmbn[i,j]])
       ytmp <- matrix(ytmp, ncol = ndim, nrow = nrow(y), byrow = TRUE)
-      ytmp <-cbind.data.frame(lapply(seq_len(object$rho$ndim), function(j){
-        if (!all(ytmp[,j] %in% c(NA, levels(y[,j]))))  stop("response.cat are different from the categories in the original data set")
-        else ordered(ytmp[,j], levels = levels(y[,j]))
-      }))
+      # ytmp <-cbind.data.frame(lapply(seq_len(object$rho$ndim), function(j){
+      #   if (!all(ytmp[,j] %in% c(NA, levels(y[,j]))))  stop("response.cat are different from the categories in the original data set")
+      #  else ordered(ytmp[,j], levels = object$rho$levels[[j]])
+      # }))
+      ytmp <- cbind.data.frame(
+        lapply(seq_len(object$rho$ndim), function(j) {
+          ordered(ytmp[,j], levels = object$rho$levels[[j]])
+        }))
       Xcat <- make_Xcat(object, ytmp, x)
       pred.upper  <- sapply(seq_len(ndim), function(j) {
         th_u <- c(object$theta[[j]], object$rho$inf.value)[ytmp[, j]]
@@ -481,7 +540,6 @@ pred_class_fun <-  function(object, y, x, offset, stddevs, sigma) {
       })/stddevs
       pred.lower[is.na(pred.lower)] <- -object$rho$inf.value
       pred.upper[is.na(pred.upper)] <- object$rho$inf.value
-      ############################################
       object$rho$link$F_multi(U = pred.upper, L = pred.lower,
                               list_R = lapply(sigma, cov2cor))
     })

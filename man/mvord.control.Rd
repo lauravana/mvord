@@ -21,8 +21,9 @@ mvord.control(
 Should only be used if user knows the ordering of the responses in the analysis.}
 
 \item{solver}{character string containing the name of the applicable solver of \code{\link[optimx]{optimx}} (default is \code{"newuoa"})
-or wrapper function for user defined solver.
-@param solver.optimx.control a list of control arguments to be passed to \code{\link[optimx]{optimx}}. See \code{\link[optimx]{optimx}}.}
+or wrapper function for user defined solver.}
+
+\item{solver.optimx.control}{a list of control arguments to be passed to \code{\link[optimx]{optimx}}. See \code{\link[optimx]{optimx}}.}
 }
 \description{
 Control arguments are set for \code{mvord()}.

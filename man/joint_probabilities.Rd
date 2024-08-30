@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict.R
 \name{joint_probabilities}
 \alias{joint_probabilities}
-\title{Extracts fitted Probabilities for Multivariate Ordinal Regression Models.}
+\title{Fitted probabilities for multivariate ordinal regression models for given response categories.}
 \usage{
 joint_probabilities(
   object,
@@ -17,9 +17,9 @@ joint_probabilities(
 \arguments{
 \item{object}{an object of class \code{'mvord'}.}
 
-\item{response.cat}{vector or matrix with response categories (for each subject one row of length equal to the number of multiple measurements).}
+\item{response.cat}{vector or matrix with response categories (for each subject, one row of length equal to the number of multiple measurements).}
 
-\item{newdata}{(optional) data frame of new covariates and new responses. The names of the variables should correspond to the names of the
+\item{newdata}{(optional) data frame of new covariates. The names of the variables should correspond to the names of the
 variables used to fit the model. By default the data on which the model was estimated is considered.}
 
 \item{type}{\code{"prob"} for joint probabilities and \code{"cum.prob"} for joint cumulative probabilities.}
@@ -31,10 +31,19 @@ variables used to fit the model. By default the data on which the model was esti
 \item{...}{further arguments passed to or from other methods.}
 }
 \description{
-Extracts fitted probabilities for given response categories from a fitted model of class \code{'mvord'}.
+Extracts fitted probabilities for given combination of response categories from a fitted model of class \code{'mvord'}.
 }
 \details{
-The current implementation supports only in-sample predictions.
+The function provides a convenient way to extract probabilities for a given combination of response
+categories, given a set of covariates. The results obtained are the same as the ones by \code{predict()}
+with \code{type = "prob"} or \code{type = "cum.prob"}. The difference is that in \code{joint_probabilities()},
+for the same set of covariates, only the  \code{response.cat} argument must be changed to obtain predictions for new classes.
+In \code{predict()}, one would need to reconstruct a new data frame \code{newdata} everytime a new response combination should be
+investigated.
+
+From \code{newdata} only the columns corresponding to the covariates will be considered. Any columns corresponding to the
+responses will be ignored.
+
 The row names of the output correspond to the subjectIDs.
 }
 \seealso{
