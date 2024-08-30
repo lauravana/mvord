@@ -218,6 +218,10 @@ joint_probabilities <- function(object, response.cat,
     object$error.struct <- tmp$error.struct
     offset <- tmp$offset
   }
+  if(is.vector(response.cat)) {
+    response.cat <- matrix(response.cat, ncol = length(response.cat),
+                           nrow = nrow(y), byrow = TRUE)
+  }
   ## get correlation/covariance matrices
   sigma <- error_structure(object, type ="sigmas")
   stddevs <- sqrt(t(sapply(sigma, diag)))
@@ -227,18 +231,16 @@ joint_probabilities <- function(object, response.cat,
     if(!all(subjectID %in% rownames(y))) stop("Not all subjectIDs in data!")
     ind <- match(subjectID, rownames(y))
     y <- y[ind, , drop=FALSE]
-    x <- lapply(x, function(xx) xx[ind, , drop=FALSE])
+    x <- lapply(x, function(xx) xx[ind, , drop = FALSE])
     offset <-  lapply(offset, function(xx) xx[ind])
     sigma <- sigma[ind]
     stddevs <- stddevs[ind, , drop = FALSE]
+    response.cat <- response.cat[ind, , drop = FALSE]
   }
 
 
 
-  if(is.vector(response.cat)) {
-    response.cat <- matrix(response.cat, ncol = length(response.cat),
-                           nrow = nrow(y), byrow = TRUE)
-  }
+
 
   ytmp <- cbind.data.frame(lapply(seq_len(ndim), function(j){
     if (!all(response.cat[,j] %in% c(NA,object$rho$levels[[j]]))) {
