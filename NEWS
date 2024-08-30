@@ -3,8 +3,8 @@ This file documents updates and changes in the package mvord
 changes in version 1.2.5 (2024-08-26)
 - added Authors@R
 - fixed example 3 in vignette_mvord2.Rmd
-- in marginal_predict(), newdata can now contain no response variable; in this case
-type = "all.prob" will be used by default.
+- in marginal_predict(), predict() and joint_probabilities() newdata can now contain no response variable;
+- adjusted docu for joint_probabilities()
 
 changes in version 1.2.4 (2024-07-01)
 - change handling of data argument to work also with tibbles
