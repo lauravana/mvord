@@ -1,0 +1,390 @@
+\documentclass[a4paper,fleqn]{article}
+\usepackage[round]{natbib}
+\usepackage{url}
+\usepackage{amsfonts,bm, enumerate}
+\usepackage{amsmath}
+\usepackage{threeparttablex}
+\usepackage{refcount}
+\newcommand{\myfootnotemark}{\footnotemark\label{fn:mark}}
+\newcommand{\myfootnotetext}[1]{\footnotetext{#1\label{fn:text}%
+        \edef\fnmark{\getpagerefnumber{fn:mark}}%
+        \edef\fntext{\getpagerefnumber{fn:text}}%
+        \ifx\fnmark\fntext\else\ClassWarning{}{footnote mark and text on different pages!}\fi}}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\VAR}{\mathrm{var}}
+\newcommand{\COV}{\mathrm{cov}}
+\newcommand{\LOG}{\mathrm{log}}
+\newcommand{\EXP}{\mathrm{exp}}
+\newcommand{\R}{\mathbb{R}}
+\renewcommand{\P}{\mathbb{P}}
+\newcommand{\OPN}[1]{\operatorname{#1}}
+%\usepackage{amsfonts,amsopn,amsmath,enumerate,bm}
+\let\code=\texttt
+\newcommand{\pkg}[1]{{\fontseries{b}\selectfont #1}}
+\title{Computing the standard errors in the multivariate ordinal regression models implemented in \pkg{mvord}}
+\author{Laura  Vana}
+
+\begin{document}
+
+\maketitle{}
+
+\noindent
+
+Let $\bm\delta = (\bm{\theta}^\top, \bm{\beta}^\top,\alpha^\top, \bm\gamma^\top)^\top$ be the vector of parameters to be estimated by composite likelihood methods which contains threshold parameters $\bm{\theta}$, the regression
+coefficients $\bm{\beta}$, the
+parameters of the correlation structure $\bm\alpha$ and parameters of the error structure corresponding to the variances $\bm\gamma$ (if applicable). Moreover, let $\bm x_{ij}$ be a vector of $P$ covariates corresponding to subject $i$ and outcome $j$.
+
+The pairwise log-likelihood for subject $i$ is given by the sum of all bivariate combinations of log probabilities:
+$$p\ell_i(\bm\delta)= w_i\sum_{k<l} p\ell_{ikl}(\bm\delta; Y_{ik},Y_{il})= w_i\sum_{k<l}\LOG \mathrm{Pr}(Y_{ik}=r_{ik}, Y_{il}=r_{il}).$$
+where $p_i(\bm\delta)$ is the component of the pairwise log-likelihood corresponding to subject~$i$ and
+$p_{ikl}(\bm \delta)$ corresponds to subject~$i$ and pair $(k, l)$.
+By using the latent variable specification, the rectangle probabilities can be rewritten as
+\begin{align*}
+\mathrm{Pr}(Y_{ik}=r_{ik}, Y_{il}=r_{il})=& F_{\rho_i}(L_{ik}(\bm\delta)\leq x\leq U_{ik}(\bm\delta), L_{il}(\bm\delta)\leq x\leq U_{il}(\bm\delta))\\
+ =& F_{\rho_i}(U_{ik}(\bm\delta), U_{il}(\bm\delta)) -
+   F_{\rho_i}(L_{ik}(\bm\delta), U_{il}(\bm\delta)) -\\
+&  F_{\rho_i}(U_{ik}(\bm\delta), L_{il}(\bm\delta)) +
+   F_{\rho_i}(L_{ik}(\bm\delta), L_{il}(\bm\delta)),
+\end{align*}
+where for subject $i$ $F$ denotes the bivariate CDF, $\rho_i$ denotes the correlation between the $k$-th and the $l$-th response,
+$U_{ik}(\bm\delta)$ is the upper linear predictor and $L_{ik}(\bm\delta)$ is the lower linear predictor for the $k$-th response.
+
+In order to define the linear predictors we  first introduce further notation as well as  the constraints implemented in \pkg{mvord}. In line with the constraints defined in \pkg{VGAM} and \pkg{mvord} packages, let $H_1$, $H_2$, $\ldots$, $H_P$ be known full-column rank constraint matrices which in the most general case are all equal to the identity matrix. Moreover, let $H_\theta$ denote the constraint matrix for the threshold parameters\footnote{The threshold constraints in \pkg{mvord} are defined in a different way using the \texttt{threshold.constraints} argument. However, these constraints can easily be transformed into a matrix of zeros and ones, such as the matrices passed to argument \texttt{coef.constraints}.}.
+The list of constraint matrices is combined into a block diagonal matrix $H = \mathrm{diag}(H_\theta, H_1,\ldots,H_P)$.
+The total number of threshold and coefficient parameters $P^*$ is equal to the number of columns of $H$: $P^*=\mathrm{ncol}(H)$. Let $\tilde H_{(j)}$ be the $((K_j-1)\times P^*)$ matrix of constraints corresponding to the $j$-th response. This is obtained by taking the rows in $H$ that correspond to $j$ (the first $K_1-1$ rows of each $H_p$ correspond to the first response, the next $K_2-1$ rows of each $H_p$ correspond to the second response etc.).
+
+The $(n\times P)$ matrix of covariates $X_j$ corresponds to the $j$-th response.
+As the \pkg{mvord} package allows for category specific coefficients, we now create an interaction between each column on $X_j$ and the response variable $Y_j$ which is an ordered factor. The design matrix of the $Y_j$ response variable will have $K_j-1$ columns. Here the separation is made between the upper linear predictor and the lower linear predictor.
+
+Let $D_j^U$ denote the design matrix corresponding to the  $j$-th response variable,
+where the first column is a dummy variable equal to one if $Y_{ij}=2$, the second column is an dummy variable equal to one if $Y_{ij}=3$, $\ldots$ and the last column has entries one if $Y_{ij}=K_j$ for $i=1,\ldots,n$. Analogously, let $D_j^L$ denote the design matrix corresponding to the  $j$-th response variable,
+where the first column is a dummy variable equal to one if $Y_{ij}=1$, the second column equal is an dummy variable equal to one if $Y_{ij}=2$, $\ldots$ and the last column has entries one if $Y_{ij}=K_j-1$ for $i=1,\ldots,n$.
+Then the model matrices to be used in the analysis are given by:
+\begin{align*}
+\tilde X_j^U&= \left(D_j^U| \mathrm{diag}(X_j\bm e_1)D_j^U|\ldots|\mathrm{diag}(X_j\bm e_{P+1})D_j^U \right)\\
+\tilde X_j^L&=\left(D_j^U|\mathrm{diag}(X_j\bm e_1)D_j^L|\ldots|\mathrm{diag}(X_j\bm e_{P+1})D_j^L \right)
+\end{align*}
+where $\bm e_p$ for $p=1,\ldots P+1$ is the orthonormal basis.
+
+Let $\bm\psi = (\bm\theta^\top, -\bm\beta^\top)^\top$ be the vector of threshold and regression parameters.
+The linear predictors are then equal to:
+$$ U_{ij}(\bm\delta) = \frac{\bm {\tilde{x}}_{ij}^{U \top} \tilde H_{(j)}\bm\psi}{\sigma_{ij}(\bm\gamma)} \qquad
+L_{ij}(\bm\delta)= \frac{\bm {\tilde{x}}_{ij}^{L \top} \tilde H_{(j)}\bm\psi}{\sigma_{ij}(\bm\gamma)},$$
+where $\sigma_{ij}(\bm\gamma)$ denotes the standard deviation corresponding to subject $i$ and response $j$.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Gradient}
+For computing the gradient, the derivatives of the likelihood with respect to $\bm\psi$, $\bm\alpha$ and $\bm\gamma$ are computed. For computing the derivatives, we need the following derivation (using the rule for differentiation under the integral sign):
+\begin{align}\label{eq:dFdx}
+\frac{\partial F_\rho(x_1, x_2)}{\partial x_1} &= \frac{\partial }{\partial x_1}\int_{-\infty}^{x_1}\left[\int_{-\infty}^{x_2} f_\rho(a, b)db\right]da\\ \nonumber
+&=\int_{-\infty}^{x_2}f_\rho(x_1, b) db=\int_{\infty}^{x_2}f(b|x_1, \rho)f(x_1) db\\\nonumber
+&=f(x_1) \int_{-\infty}^{x_2}f(b|x_1, \rho)db
+\end{align}
+where $f_\rho(x_1, x_2)$ is the density corresponding to the CDF $F_\rho(x_1,x_2)$ and $f(x)$ is the univariate density corresponding to the marginal distribution.
+Moreover, by the multivariable chain rule the derivative of the bivariate CDF $F(A(\bm\delta), B(\bm\delta))$ is:
+$$  \frac{\partial F_\rho(A(\bm\delta), B(\bm\delta))}{\partial\bm\delta} = \frac{\partial F_\rho(A(\bm\delta), B(\bm\delta))}{\partial A(\bm\delta)}\frac{\partial A(\bm\delta)}{\partial\bm\delta} +
+  \frac{\partial F_\rho(A(\bm\delta), B(\bm\delta))}{\partial B(\bm\delta)}\frac{\partial B(\bm\delta)}{\partial\bm\delta}.
+%   \frac{\partial}{\partial\bm\delta} \int_{-\infty}^{A(\bm\delta)}\int_{-\infty}^{B(\bm\delta)}f_\rho(x_1, x_2)dx_1dx_2 \\
+%   &=\int_{-\infty}^{A(\bm\delta)} \left( \frac{\partial}{\partial\bm\delta} \int_{-\infty}^{B(\bm\delta)}f(x_1|x_2, \rho)f(x_2)dx_1\right)dx_2 \\
+% &+  \frac{\partial A(\bm\delta)}{\partial \bm\delta}\int_{-\infty}^{B(\bm\delta)}f(x_2|A(\bm\delta), \rho)f(A(\bm\delta))dx_2.
+$$
+
+\subsection{Derivative of the log likelihood with respect to $\bm\psi$}
+\begin{align*}
+  \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\psi}=& \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{ik}(\bm\delta)}\frac{\partial U_{ik}(\bm\delta)}{\partial\bm\psi} + \\
+  & + \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{il}(\bm\delta)}\frac{\partial U_{il}(\bm\delta)}{\partial\bm\psi}
+\\
+=& \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{ik}(\bm\delta)} \frac{\bm {\tilde{x}}_{ij}^{U \top} \tilde H_{(k)}}{\sigma_{ik}(\bm\gamma)} + \\
+  & + \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{il}(\bm\delta)}\frac{\bm {\tilde{x}}_{ij}^{U \top} \tilde H_{(l)}}{\sigma_{il}(\bm\gamma)}
+\end{align*}
+Similarly, the other three terms for the rectangle probabilities are computed. Therefore, the derivative of the log likelihood with respect to $\bm\psi$ is:
+\begin{align*}
+\frac{\partial p\ell_i(\bm\delta)}{\partial \bm\psi}=&  w_i\sum_{k<l}\frac{\partial p\ell_{ikl}(\bm\delta)}{\partial \bm\psi}\\
+=& w_i\sum_{k<l}\frac{1}{\mathrm{Pr}(Y_{ik}=r_{ik}, Y_{il}=r_{il})}\times\\
+&\left\{\frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\psi}-
+\frac{\partial F_\rho(U_{ik}(\bm\delta),L_{il}(\bm\delta))}{\partial\bm\psi} - \right.\\
+&\left.\frac{\partial F_\rho(L_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\psi} + \frac{\partial F_\rho(L_{ik}(\bm\delta),L_{il}(\bm\delta))}{\partial\bm\psi}\right\}.
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Derivative of the log-likelihood with respect to $\bm\gamma$}
+\begin{align*}
+\frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\gamma}=& \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{ik}(\bm\delta)}\frac{\partial U_{ik}(\bm\delta)}{\partial\bm\gamma} + \\
+  & + \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{il}(\bm\delta)}\frac{\partial U_{il}(\bm\delta)}{\partial\bm\gamma}
+\\
+=& \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{ik}(\bm\delta)}\frac{\partial U_{ik}(\bm\delta)}{\partial \sigma_{ik}(\bm\gamma)}
+\frac{\partial \sigma_{ik}(\bm\gamma)}{\partial\bm\gamma}\\
+  & + \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial U_{il}(\bm\delta)}\frac{\partial U_{il}(\bm\delta)}{\partial \sigma_{il}(\bm\gamma)}
+\frac{\partial \sigma_{il}(\bm\gamma)}{\partial\bm\gamma}\\
+\frac{\partial U_{ij}(\bm\delta)}{\partial \sigma_{ij}(\bm\gamma)}=& - U_{ij}(\bm\delta)/\sigma_{ij}(\bm\gamma), \quad j=k,l.
+\end{align*}
+In \pkg{mvord} the only error structure which allows a covariance is \texttt{cov\_general}. A linear model is employed on the log variance parameters:
+$$\LOG \sigma_{ij}^2=\gamma_{0j} + \bm s^\top_i\bm\gamma_j \Rightarrow \sigma_{ij}(\bm\gamma)=\sqrt{\EXP\{\gamma_{0j} + \bm s^\top_i\bm\gamma_j}\}.$$
+Hence
+\begin{align*}
+\frac{\partial \sigma_{ij}(\bm\gamma)}{\partial\bm\gamma}=\frac{\sqrt{\EXP\{\gamma_{0j} + \bm s^\top_i\gamma_j\}}}{2}(1,\bm s_i)^\top.
+\end{align*}
+Therefore, the derivative of the log likelihood with respect to $\bm\gamma$ is:
+\begin{align*}
+\frac{\partial p\ell_i(\bm\delta)}{\partial \bm\gamma}=&w_i\sum_{k<l}\frac{\partial p\ell_{ikl}(\bm\delta)}{\partial \bm\gamma} \\
+=&w_i\sum_{k<l}\frac{1}{\mathrm{Pr}(Y_{ik}=r_{ik}, Y_{il}=r_{il})}\times\\
+&\left\{\frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\gamma}-
+\frac{\partial F_\rho(U_{ik}(\bm\delta),L_{il}(\bm\delta))}{\partial\bm\gamma} - \right.\\
+&\left.\frac{\partial F_\rho(L_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\gamma} + \frac{\partial F_\rho(L_{ik}(\bm\delta),L_{il}(\bm\delta))}{\partial\bm\gamma}\right\}.
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Derivative with respect to $\bm\alpha$}
+\begin{align*}
+\frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\alpha}=& \frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial \rho_i(\bm\alpha)}\frac{\partial \rho_i(\bm\alpha)}{\partial\bm\alpha}.
+\end{align*}
+In \pkg{mvord} three correlation structures are implemented : \texttt{cor\_general()},  \texttt{cor\_equi()},  and \texttt{cor\_ar1()}. The following transformations are used for the different correlation structures:
+
+\begin{center}
+\begin{tabular}{rcc}
+Correlation & $\rho_i(\bm \alpha)$&$\partial\rho_i(\bm \alpha)/\partial\bm\alpha$ \\
+\hline
+\texttt{cor\_general()}& $\bm s^\top_i\bm \alpha\,\,$\myfootnotemark&$\bm s^\top_i$ \\
+\texttt{cor\_equi()}& $\frac{\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}-1}{\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}+1}$&
+$\frac{\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}}{(\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}+1)^2} 4 s_i^\top=g_i(\bm\alpha)$ \\
+\texttt{cor\_ar1()}& $\left(\frac{\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}-1}{\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}+1}\right)^{l-k}$&
+$(l-k)\left(\frac{\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}-1}{\EXP\{2(\alpha_0+s_i^\top\bm\alpha)\}+1}\right)^{l-k-1}g_i(\bm\alpha)$\\
+\end{tabular}
+\myfootnotetext{In \pkg{mvord}'s \texttt{cor\_general()} $\bm s_i$ must be a matrix of dummy variables corresponding to a factor with maximum 30 levels. }
+\end{center}
+Therefore, the derivative of the log likelihood with respect to $\bm\alpha$ is:
+\begin{align*}
+\frac{\partial p\ell_i(\bm\delta)}{\partial \bm\alpha}=& w_i\sum_{k<l}\frac{\partial p\ell_{ikl}(\bm\delta)}{\partial \bm\alpha}\\
+=&w_i\sum_{k<l}\frac{1}{\mathrm{Pr}(Y_{ik}=r_{ik}, Y_{il}=r_{il})}\times\\
+&\left\{\frac{\partial F_\rho(U_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\alpha}-
+\frac{\partial F_\rho(U_{ik}(\bm\delta),L_{il}(\bm\delta))}{\partial\bm\alpha} - \right.\\
+&\left.\frac{\partial F_\rho(L_{ik}(\bm\delta),U_{il}(\bm\delta))}{\partial\bm\alpha} + \frac{\partial F_\rho(L_{ik}(\bm\delta),L_{il}(\bm\delta))}{\partial\bm\alpha}\right\}.
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Expressions for the different link functions}
+
+\begin{tabular}{c|c|c}
+& \texttt{mvprobit()}&\texttt{mvlogit()}\\
+\hline
+$f(x)$& $\phi(x)$ & $\EXP(x)/(\EXP(x) + 1)^2$\\
+$\frac{\partial F_\rho(x_1,x_2)}{\partial x_1}$& $\phi(x_1)\Phi\left(\frac{x_2-\rho x_1}{\sqrt{1-\rho^2}}\right)$ &$t_\nu(x_1)  T_{\nu_c}\left(\frac{\tilde x_2 - \mu_c}{\sigma_c}\right)$ (see below)  \\
+$\frac{\partial F_\rho(x_1,x_2)}{\partial \rho}$& $\frac{1}{2\pi \sqrt{1-\rho^2}}\EXP\left\{-\frac{x_1^2 - 2\rho x_1 x_2 + x_2^2}{2(1-\rho^2)} \right\}$&$
+\frac{1}{2\pi\sqrt{1-\rho^2}}\left(1 + \frac{x_1^2 + x_2^2 - 2\rho x_1x_2}{\nu(1-\rho^2)} \right)^{-\nu/2}$\\
+\end{tabular}
+
+\subsubsection{Notes on the multivariate probit link}
+The derivation for the probit link is straightforward:
+\begin{align*}
+\frac{\partial F_\rho(x_1, x_2)}{\partial x_1} &=\int_{\infty}^{x_2}\phi_\rho(x_1, b) db=\phi(x_1)\int_{\infty}^{x_2}f(b|x_1, \rho) db\\\nonumber
+&=f(x_1) \int_{\infty}^{x_2}f(b|x_1, \rho)db
+\end{align*}
+The conditional density $x_2|x_1$ is normal
+with location $\mu_c = \rho x_1$ and variance $\sigma_c =  (1 - \rho^2)$. Hence
+\begin{align*}
+\frac{\partial F_\rho(x_1, x_2)}{\partial x_1}
+&=f(x_1) \Phi\left(\frac{x_2-\rho x_1}{\sqrt{1-\rho^2}}\right).
+\end{align*}
+For the correlation parameter, the derivative of the bivariate normal pdf with respect to $\rho$ is \footnote{\url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.744.3738&rep=rep1&type=pdf}}:
+$$ \frac{d\Phi(x, y, \rho)}{d\rho} = \phi(x, y, \rho)= \frac{1}{2\pi \sqrt{1-\rho^2}}\mathrm{exp}\left\{-\frac{x^2 - 2\rho x y + y^2}{2(1-\rho^2)} \right\}.$$
+\subsubsection{Notes on the multivariate logit link}
+A \emph{multivariate
+  logit link} is constructed by employing a multivariate logistic
+distribution family with univariate logistic margins and a $t$ copula
+with certain degrees of freedom.  For a vector $\bm x=(x_1,\,\dots,\,
+x_q)^\top$, the multivariate logistic distribution function with $\nu$
+degrees of freedom, mean zero and correlation matrix $\bm R$ is defined as:
+\begin{align}\label{eqn:logistic}
+  F_{\nu, \bm R}(\bm x) = T_{\nu, \bm
+    R}(\{g_\nu(x_1),\, \dots,\,
+  g_\nu(x_q)\}^\top),
+\end{align}
+where $T_{\nu,\bm R}$ is the $q$~dimensional multivariate
+$t$~distribution CDF with $\nu$ degrees of freedom and correlation matrix
+$\bm R$ and $t_{\nu,\bm R}$ is the corresponding density, $g_\nu(x) =
+T^{-1}_{\nu}(\exp(x)/(\exp(x) + 1))$, $T^{-1}_{\nu}$ is the quantile
+function and $t_{\nu}$ is the density of the univariate $t$ distribution with $\nu$ degrees of
+freedom.
+For the bivariate probabilities we need:
+\begin{align*}
+  F_{\nu,\rho}(x_1, x_2) = T_{\nu, \rho}(\{g_\nu(x_1),\,
+  g_\nu(x_2)\}^\top)
+\end{align*}
+We compute the first derivative:
+\begin{align*}
+  \frac{\partial F_{\rho}(x_1, x_2)}{\partial x_1}= \frac{\partial T_{\nu, \rho}(g_\nu(x_1),\,
+    g_\nu(x_2))}{\partial x_1}
+\end{align*}
+Denote $g_\nu(x_i)$ by $\tilde x_i$:
+\begin{align*}
+  \frac{\partial F_{\rho}(x_1, x_2)}{\partial x_1} &= \frac{\partial T_{\nu, \rho}(\tilde x_1,\,\tilde x_2)}{\partial x_1} =
+  \frac{\partial T_{\nu, \rho}(\tilde x_1,\,\tilde x_2)}{\partial \tilde x_1} \frac{\partial \tilde x_1}{\partial x_1}.
+\end{align*}
+Using Equation~\eqref{eq:dFdx}
+\begin{align*}
+   \frac{\partial T_{\nu, \rho}(\tilde x_1,\,\tilde x_2)}{\partial \tilde x_1}  & = t_\nu(\tilde x_1)  \int_{-\infty}^{\tilde x_1} f(b|x_1, \rho)db
+  % \frac{\partial y_1(z_1)}{\partial z_1} & =   \frac{\partial g_\nu((z_1-\mu_1)/\sigma_1) }{\partial z_1} =
+  % = \frac{1}{t_\nu(y_1(z_1))}dlogis((z_1-\mu_1)/\sigma_1))\frac{1}{\sigma_1}\\
+  %  \frac{\partial F_{\cdot}(z_1, z_2)}{\partial z_1} &=  T_{\nu_c, \mu_c, \sigma_c}(y_2(z_2)) dlogis((z_1-\mu_1)/\sigma_1))\frac{1}{\sigma_1}
+\end{align*}
+The conditional density of a bivariate t-distribution with $\nu$ degrees of freedom is proportional to: (See Ding (2016) https://arxiv.org/pdf/1604.00561.pdf)
+$$ x_2|x_1 \sim t(\mu_c, \sigma_c , \nu_c)$$
+with location $\mu_c = \rho x_1$, variance $\sigma_c = (\nu + x_1^2)/(\nu + 1) \times (1 - \rho^2)$ , degrees of freedom $\nu_c=\nu + 1$. Hence
+\begin{align*}
+   \frac{\partial T_{\nu, \rho}(\tilde x_1,\,\tilde x_2)}{\partial \tilde x_1}  & = t_\nu(\tilde x_1)   T_{\nu_c}\left(\frac{\tilde x_2 - \mu_c}{\sigma_c}\right)
+\end{align*}
+By using the formula: $\partial F^{-1}(x)/ \partial x = 1/F'(F^{-1}(x))$ we have:
+\begin{align*}
+\frac{\partial \tilde x_1}{\partial x_1} & =   \frac{\partial g_\nu(x_1) }{\partial x_1} =
+   = \frac{1}{t_\nu(\tilde x_1)}t_\nu(x_1).
+  %  \frac{\partial F_{\cdot}(z_1, z_2)}{\partial z_1} &=  T_{\nu_c, \mu_c, \sigma_c}(y_2(z_2)) dlogis((z_1-\mu_1)/\sigma_1))\frac{1}{\sigma_1}
+\end{align*}
+Finally, the derivative is
+\begin{align*}
+ \frac{\partial T_{\nu, \rho}(\tilde x_1, \tilde x_2)}{\partial x_1}=   T_{\nu_c}\left(\frac{\tilde x_2 - \mu_c}{\sigma_c}\right)t_\nu(x_1).
+\end{align*}
+For the correlation parameter, the derivative of the bivariate $t$ CDF with respect to $\rho$ is (from Plackett's formula)\footnote{\url{http://www.math.wsu.edu/faculty/genz/papers/bvnt.pdf}}:
+\begin{align*}
+  \frac{\partial T_{\nu,\rho}(x_1, x_2)}{\partial\rho} &=  \frac{\partial}{\partial\rho} \int_{-\infty}^{x_1}\left[\int_{-\infty}^{x_2} t(a,b,\rho)db\right]da= \int_{-\infty}^{x_1}\left[\int_{-\infty}^{x_2} \frac{\partial t(a,b,\rho)}{\partial\rho}db\right]da \\
+  & = \frac{\left(1 + \frac{x_1^2 + x_2^2 - 2\rho x_1x_2}{\nu(1-\rho^2)} \right)^\frac{-\nu}{2}}{2\pi\sqrt{1-\rho^2}}.
+\end{align*}
+% \newpage
+% For component $k$, $l$ for observation $i$ the likelihood is:
+% \begin{align*}
+%   \Phi(L_k(\bm\beta_k)\leq x\leq U_k(\bm\beta_k), L_l(\bm\beta_l)\leq x\leq U_l(\bm\beta_l)) &=
+%   \Phi(U_k(\bm\beta_k), U_l(\bm\beta_l)) -
+%   \Phi(L_k(\bm\beta_k), U_l(\bm\beta_l)) - \\
+%   &\Phi(U_k(\bm\beta_k), L_l(\bm\beta_l)) + \Phi(L_k(\bm\beta_k), L_l(\bm\beta_l))
+% \end{align*}
+% where $U_k(\bm\beta_k) = \frac{\theta_{k, r_{ik}}- \bm x_i^\top\bm\beta_k}{\sigma_{ik}} $ and $L_k(\bm\beta_k) = \frac{\theta_{k, r_{ik}-1}- \bm x^\top_i\bm\beta_k}{\sigma_{ik}}$.
+%
+%
+% The derivative of $\Phi(A(\bm\beta), B(\bm\beta))$ is (see wiki Leibniz integral rule):
+% \begin{align*}
+%   \frac{d}{d\bm\beta} \int_{-\infty}^{A(\bm\beta)}\int_{-\infty}^{B(\bm\beta)}\phi(x_1, x_2)dx_1dx_2 &=  \int_{-\infty}^{A(\bm\beta)} \left( \frac{d}{d\bm\beta} \int_{-\infty}^{B(\bm\beta)}\phi(x_1|x_2)\phi(x_2)dx_2\right)dx_1 + \\
+%   &A^\prime(\bm\beta)\int_{-\infty}^{B(\bm\beta)}\phi(x_2|A(\bm\beta)\phi(A(\bm\beta))dx_2.
+% %  \frac{d}{d\bm\beta} \int_{-\infty}^{B(\bm\beta)}\phi(x_1|x_2)\phi(x_2)dx_2 &=  \int_{-\infty}^{B(\bm\beta)} \frac{d}{d\bm\beta} \phi(x_1|x_2)\phi(x_2)dx_2 + \phi(x_1|B(\bm\beta))\phi(B(\bm\beta))B^\prime(\bm\beta)\\
+% % \frac{d}{d\bm\beta} \int_{-\infty}^{A(\bm\beta)}\int_{-\infty}^{B(\bm\beta)}\phi(x_1, x_2)dx_1dx_2 &=   \int_{-\infty}^{A(\beta)}\phi(x_1|B(\bm\beta))\phi(B(\bm\beta))B^\prime(\bm\beta)dx_1 +\\
+% %  & \phi(A(\bm\beta)) \Phi \left(\frac{B(\bm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right) A^\prime(\bm\beta)\\
+% %  &= \phi(B(\bm\beta))B^\prime(\bm\beta) \Phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right) + \\
+% %  &\phi(A(\bm\beta)) \Phi \left(\frac{B(\bm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right) A^\prime(\bm\beta)
+% \end{align*}
+% If $\beta_k\neq \beta_l$ first term goes away so we have:
+% \begin{align*}
+%   \frac{d}{d\bm\beta_k}&\Phi(U_k(\bm\beta_k), U_l(\bm\beta_l))=
+% \int_{-\infty}^{U_k(\bm\beta_k)}\int_{-\infty}^{U_l(\bm\beta_l)}\phi(x_1, x_2)dx_1dx_2 = \\
+%  & = \frac{d U_k(\bm\beta_k)}{d\bm\beta_k}\int_{-\infty}^{U_l(\bm\beta_l)} \phi(U_k(\bm\beta_k),x_2)dx_2= \frac{d U_k(\bm\beta_k)}{d\bm\beta_k}\int_{-\infty}^{U_l(\bm\beta_l)} \phi(x_2|U_k(\bm\beta_k))\phi(U_k(\bm\beta_k))dx_2 \\
+%  &= \frac{d U_k(\bm\beta_k)}{d\bm\beta_k}\phi( U_k(\bm\beta_k)) \Phi \left(\frac{ U_l(\bm\beta_l)- \rho  U_k(\bm\beta_k)}{\sqrt{1-\rho^2}}\right)
+% \end{align*}
+%
+% Otherwise, if $\beta = \beta_k = \beta_l$ we have:
+% \begin{align*}
+%   \frac{d}{d\bm\beta}&\Phi(U_k(\bm\beta), U_l(\bm\beta))=
+% \int_{-\infty}^{U_k(\bm\beta)}\int_{-\infty}^{U_l(\bm\beta)}\phi(x_1, x_2)dx_1dx_2 = \\
+% & =\frac{d U_l(\bm\beta)}{d\bm\beta}\int_{-\infty}^{U_k(\bm\beta)} \phi(x_1, U_l(\bm\beta))dx_1 +
+% \frac{d U_k(\bm\beta)}{d\bm\beta}\int_{-\infty}^{U_l(\bm\beta)} \phi(U_k(\bm\beta),x_2)dx_2\\
+%  &=  \frac{d U_l(\bm\beta)}{d\bm\beta}\phi( U_l(\bm\beta)) \Phi \left(\frac{ U_k(\bm\beta)- \rho  U_l(\bm\beta)}{\sqrt{1-\rho^2}}\right)  + \frac{d U_k(\bm\beta)}{d\bm\beta}\phi( U_k(\bm\beta)) \Phi \left(\frac{ U_l(\bm\beta)- \rho  U_k(\bm\beta)}{\sqrt{1-\rho^2}}\right)
+% \end{align*}
+%
+%
+% For the correlation parameter, the derivative of the bivariate normal pdf with respect to $\rho$ is:
+% $$ \frac{d\Phi(x, y, \rho)}{d\rho} = \phi(x, y, \rho)= \frac{1}{2\pi \sqrt{1-\rho^2}}\mathrm{exp}\left\{-\frac{x^2 - 2\rho x y + y^2}{2(1-\rho^2)} \right\}$$
+% (source: wonderful internet https://stats.stackexchange.com/questions/71976/partial-derivative-of-bivariate-normal-cdf-and-pdf;  also found in one copulas paper:
+% \url{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.744.3738&rep=rep1&type=pdf})
+%
+%
+%
+% Analog for all the other terms of the composite likelihood.
+%
+% %% \begin{align*}
+% %%   \frac{\partial}{\partial\bm\beta\partial\bm\beta^\top} & \int_{-\infty}^{A(\bm\beta)}\int_{-\infty}^{B(\bm\beta)}\phi(x_1, x_2)dx_1dx_2 =  \\
+% %%   & \left[(- B(\bm\beta) \phi(B(\bm\beta))  \Phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)B^\prime(\bm\beta)\right. + \\
+% %%   & \phi(B(\bm\beta))  \phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)
+% %%   \left(-\frac{\rho}{\sqrt{1-\rho^2}} \right)B^\prime(\bm\beta) + \\
+% %%     & - A(\bm\beta) \phi(A(\bm\beta))  \Phi \left(\frac{B(\bm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right)A^\prime(\bm\beta) + \\
+% %%   &\left. \phi(B(\bm\beta))  \phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)
+% %%   \left(-\frac{\rho}{\sqrt{1-\rho^2}} \right)A^\prime(\bm\beta)\right]\left(-\bm x^\top_i/\sigma\right) +  \\
+% %%   &\left[\phi(B(\bm\beta))B^\prime(\bm\beta) \Phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)\right. + \left.\phi(A(\bm\beta)) \Phi \left(\frac{B(\bm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right)\right]\bm x_i^T\bm x_i/\sigma^2
+% %% \end{align*}
+%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \newpage
+% \subsection{Logit link}
+% See Ding (2016) https://arxiv.org/pdf/1604.00561.pdf
+% For component $k$, $l$ for observation $i$ the likelihood is:
+% \begin{align*}
+%   \mathcal{T}(L_k(\bm\beta_k)\leq x\leq U_k(\bm\beta_k), L_l(\bm\beta_l)\leq x\leq U_l(\bm\beta_l), \nu) &=
+%   \mathcal{T}(U_k(\bm\beta_k), U_l(\bm\beta_l), \nu) -
+%    \mathcal{T}(L_k(\bm\beta_k), U_l(\bm\beta_l), \nu) - \\
+%   & \mathcal{T}(U_k(\bm\beta_k), L_l(\bm\beta_l), \nu) +  \mathcal{T}(L_k(\bm\beta_k), L_l(\bm\beta_l), \nu)
+% \end{align*}
+% where $U_k(\bm\beta_k) = \frac{\theta_{k, r_{ik}}- \bm x_i^\top\bm\beta_k}{\sigma_{ik}} $ and $L_k(\bm\beta_k) = \frac{\theta_{k, r_{ik}-1}- \bm x^\top_i\bm\beta_k}{\sigma_{ik}}$.
+%
+%
+% The derivative of $ \mathcal{T}(A(\bm\beta), B(\bm\beta), \nu)$ is (see wiki Leibniz integral rule):
+% \begin{align*}
+%   \frac{d}{d\bm\beta} \int_{-\infty}^{A(\bm\beta)}\int_{-\infty}^{B(\bm\beta)}t(x_1, x_2, \nu)dx_1dx_2 &=  \int_{-\infty}^{A(\bm\beta)} \left( \frac{d}{d\bm\beta} \int_{-\infty}^{B(\bm\beta)}t(x_1|x_2)t(x_2, \nu)dx_2\right)dx_1 + \\
+%   &A^\prime(\bm\beta)\int_{-\infty}^{B(\bm\beta)}t(x_2|A(\bm\beta)t(A(\bm\beta), \nu)dx_2.
+% \end{align*}
+% If $\beta_k\neq \beta_l$ first term goes away so we have:
+% %  \frac{d}{d\bm\beta} \int_{-\infty}^{B(\bm\beta)}\phi(x_1|x_2)\phi(x_2)dx_2 &=  \int_{-\infty}^{B(\bm\beta)} \frac{d}{d\bm\beta} \phi(x_1|x_2)\phi(x_2)dx_2 + \phi(x_1|B(\bm\beta))\phi(B(\bm\beta))B^\prime(\bm\beta)\\
+% % \frac{d}{d\bm\beta} \int_{-\infty}^{A(\bm\beta)}\int_{-\infty}^{B(\bm\beta)}\phi(x_1, x_2)dx_1dx_2 &=   \int_{-\infty}^{A(\beta)}\phi(x_1|B(\bm\beta))\phi(B(\bm\beta))B^\prime(\bm\beta)dx_1 +\\
+% %  & \phi(A(\bm\beta)) \Phi \left(\frac{B(\bm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right) A^\prime(\bm\beta)\\
+% %  &= \phi(B(\bm\beta))B^\prime(\bm\beta) \Phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right) + \\
+% %  &\phi(A(\bm\beta)) \Phi \left(\frac{B(\bm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right) A^\prime(\bm\beta)
+%
+%
+% \begin{align*}
+%   \frac{d}{d\bm\beta_k}& \mathcal{T}(U_k(\bm\beta_k),
+%   U_l(\bm\beta_l))=
+%   \int_{-\infty}^{U_k(\bm\beta_k)}\int_{-\infty}^{U_l(\bm\beta_l)}t(x_1,
+%   x_2, \nu)dx_1dx_2 = \\ & = \frac{d
+%     U_k(\bm\beta_k)}{d\bm\beta_k}\int_{-\infty}^{U_l(\bm\beta_l)}
+%   t(U_k(\bm\beta_k),x_2, \nu)dx_2= \frac{d
+%     U_k(\bm\beta_k)}{d\bm\beta_k}\int_{-\infty}^{U_l(\bm\beta_l)}t(x_2|U_k(\bm\beta_k))t(U_k(\bm\beta_k), \nu)dx_2
+%   \\ &= \frac{d U_k(\bm\beta_k)}{d\bm\beta_k}t( U_k(\bm\beta_k), \nu)\int_{-\infty}^{U_l(\bm\beta_l)}t(x_2|U_k(\bm\beta_k))dx_2
+% %  \Phi \left(\frac{ U_l(\bm\beta_l)- \rho
+% %    U_k(\bm\beta_k)}{\sqrt{1-\rho^2}}\right)
+% \end{align*}
+% The conditional density of a bivariate t-distribution with $\nu$ degrees of freedom is proportional to: (See Ding (2016) https://arxiv.org/pdf/1604.00561.pdf)
+% $$ x_2|x_1 \sim t(\mu_c, \sigma_c , \nu_c)$$
+% with location $\mu_c = \rho x_1$, variance $\sigma_c = (\nu + x_1^2)/(\nu + 1) \times (1 - \rho^2)$ , degrees of freedom $\nu_c=\nu + 1$.
+%
+% Analog for all the other terms of the composite likelihood.
+% %% \begin{align*}
+% %%   \frac{\partial}{\partial\bm\beta\partial\bm\beta^\top} & \int_{-\infty}^{A(\bm\beta)}\int_{-\infty}^{B(\bm\beta)}\phi(x_1, x_2)dx_1dx_2 =  \\
+% %%   & \left[(- B(\bm\beta) \phi(B(\bm\beta))  \Phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)B^\prime(\bm\beta)\right. + \\
+% %%   & \phi(B(\bm\beta))  \phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)
+% %%   \left(-\frac{\rho}{\sqrt{1-\rho^2}} \right)B^\prime(\bm\beta) + \\
+% %%     & - A(\bm\beta) \phi(A(\bm\beta))  \Phi \left(\frac{B(\bm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right)A^\prime(\bm\beta) + \\
+% %%   &\left. \phi(B(\bm\beta))  \phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)
+% %%   \left(-\frac{\rho}{\sqrt{1-\rho^2}} \right)A^\prime(\bm\beta)\right]\left(-\bm x^\top_i/\sigma\right) +  \\
+% %%   &\left[\phi(B(\bm\beta))B^\prime(\bm\beta) \Phi \left(\frac{A(\bm\beta) - \rho B(\bm\beta)}{\sqrt{1-\rho^2}}\right)\right. + \left.\phi(A(\bm\beta)) \Phi \left(\frac{B(\b
+% %(source: httm\beta) - \rho A(\bm\beta)}{\sqrt{1-\rho^2}}\right)\right]\bm x_i^T\bm x_i/\sigma^2
+% %% \end{align*}
+%
+%
+%
+% \newpage
+%
+%
+% \newpage
+\section{Hessian}
+For the computation of the standard errors the Godambe information matrix will be used. The maximum pairwise likelihood estimator is asymptotically normal with asymptotic mean $\bm \delta$ and a covariance matrix which equals the inverse of the Godambe information
+matrix:
+$$ G(\bm\delta)^{-1}=H(\bm\delta)^{-1}V(\bm\delta)H(\bm\delta)^{-1}.$$
+The matrices $H(\bm\delta)$ and $V(\bm\delta)$ can be estimated as:
+$$\hat V(\bm\delta)= \frac{1}{n} \sum_{i=1}^n \frac{\partial
+        p\ell_i(\hat{\bm\delta}_{p\ell})}{\partial \bm\delta} \left(\frac{\partial
+        p\ell_i(\hat{\bm\delta}_{p\ell})}{\partial \bm\delta}\right)^{\top},\enspace \hat H(\bm\delta) =
+        -\frac{1}{n} \sum_{i=1}^n \frac{\partial^2
+          p\ell_i(\hat{\bm\delta}_{p\ell})}{\partial
+          \bm\delta\partial\bm\delta^\top},$$
+where $p\ell_i(\bm\delta;\bm Y_i)$ denotes the component of the
+composite log-likelihood for subject $i$.
+However, the computation of the second derivatives is not needed, as for composite likelihood the following holds:
+$$\hat H(\bm\delta) =
+\frac{1}{n} \sum_{i=1}^n \sum_{k<l} \frac{\partial
+        p\ell_{ikl}(\hat{\bm\delta}_{p\ell})}{\partial \bm\delta} \left(\frac{p\ell_{ikl}(\hat{\bm\delta}_{p\ell})}{\partial \bm\delta} \right)^\top.$$
+\end{document}
