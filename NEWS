@@ -1,5 +1,8 @@
 This file documents updates and changes in the package mvord
 
+changes in version 1.2.6 (2024-08-26)
+- added data_SRHS_long.rda to inst/extdata/
+
 changes in version 1.2.5 (2024-08-26)
 - added Authors@R
 - fixed example 3 in vignette_mvord2.Rmd

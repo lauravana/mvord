@@ -348,13 +348,14 @@ In this example we analyze longitudinal data on self-reported health status meas
 (5 = *poor*, 4 =
 *fair*, 3 = *good*, 2 = *very good* and 1 =
 *excellent*) derived from the Health and Retirement Study
-conducted by the University of Michigan which is available in the
-**LMest** package:
+conducted by the University of Michigan. The data set was originally
+ available in the **LMest** package and is also available  in package **mvord**:
 ```{r include=FALSE}
 # load("data_SRHS_long.rda")
 ```
 ```{r eval=TRUE, include=TRUE}
-data(data_SRHS_long, package = "LMest")
+data_path <- system.file("extdata", "data_SRHS_long.rda", package = "mvord")
+data_SRHS_long <- get(load(data_path))
 ```
 ```{r}
 str(data_SRHS_long)
