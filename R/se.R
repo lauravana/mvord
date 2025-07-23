@@ -3,41 +3,53 @@
 ##########################################################
 PL_se <- function(rho){
   # if (is.null(rho$link$deriv.fun)) {
-  #   par <- rho$optpar
-  #   ## construct Jacobian
-  #   J <- make_jac_matrix(rho)
-  #   J.inv <- solve(J)
-  #   if(rho$control$trace != 0) cat("Computing variability and hessian matrix numerically ... \n")
-  #   Vi_num <- matrix(0, ncol = length(par), nrow = rho$n)
-  #   for (i in seq_len(rho$n)) {
-  #     if (i %% 100 == 0)  cat('Computed gradient for', i, 'out of', rho$n,'subjects\n')
-  #     Vi_num[i, ] <- grad(function(par) neg_logPL_comp_i(par, rho, i), par, method = "Richardson")
-  #   }
-  #   cat("\n")
-  #   rho$Vi_num <-  Vi_num %*% J.inv
-  #   rho$V <- rho$n/(rho$n - length(par)) * crossprod(rho$Vi_num) # original variability matrix
-  #   if(rho$control$trace != 0) cat("\nComputing Hessian numerically ... \n")
-  #   Ht <-  hessian(function(par) PLfun(par, rho), par,
-  #                  method = "Richardson",
-  #                  method.args=list(eps=1e-6)) # Fisher matrix H(Gamma transf)
+  # par <- rho$optpar
+  # ## construct Jacobian
+  # J <- make_jac_matrix(rho)
+  # J.inv <- solve(J)
+  # if(rho$control$trace != 0) cat("Computing variability and hessian matrix numerically ... \n")
+  # Vi_num <- matrix(0, ncol = length(par), nrow = rho$n)
+  # for (i in seq_len(rho$n)) {
+  #   if (i %% 100 == 0)  cat('Computed gradient for', i, 'out of', rho$n,'subjects\n')
+  #   Vi_num[i, ] <- grad(function(par) neg_logPL_comp_i(par, rho, i), par, method = "Richardson")
+  # }
+  # cat("\n")
+  # rho$Vi_num <-  Vi_num %*% J.inv
+  # rho$V <- rho$n/(rho$n - length(par)) * crossprod(rho$Vi_num) # original variability matrix
+  # if(rho$control$trace != 0) cat("\nComputing Hessian numerically ... \n")
+  # Ht <-  hessian(function(par) PLfun(par, rho), par,
+  #                method = "Richardson",
+  #                method.args=list(eps=1e-6)) # Fisher matrix H(Gamma transf)
   #   rho$H.inv <-   J %*%  solve(Ht) %*% t(J)
   # } else {
-    if(rho$control$trace != 0) cat("Computing variability and hessian matrix analytically ... \n")
-    if (rho$evalOnly)   {
-      rho$H.inv <- numeric(0)
-      rho$V <- numeric(0)
+  par <- rho$optpar
+  if (rho$evalOnly)   {
+    rho$H.inv <- numeric(0)
+    rho$V <- numeric(0)
+  } else {
+    if ((rho$ndim) == 2 && rho$n <= 1000) {
+      if(rho$control$trace != 0) cat("Computing hessian matrix numerically ... \n")
+      J <- make_jac_matrix(rho)
+      Ht <-  hessian(function(par) PLfun(par, rho), par,
+                     method = "Richardson") # Fisher matrix H(Gamma transf)
+      Ht.inv <- tryCatch(chol2inv(chol(Ht)))
+      rho$H.inv <- J %*% tcrossprod(Ht.inv, J)
+      rho$varGamma <- rho$H.inv ## inverse observed fisher information matrix
+      rho$claic <- 2 * rho$objective + 2 * ncol(rho$H.inv)
+      rho$clbic <- 2 * rho$objective + log(rho$n) * ncol(rho$H.inv)
     } else {
+      if(rho$control$trace != 0) cat("Computing variability and hessian matrix analytically ... \n")
       derivs_for_se <- derivs_ana(rho)
       rho$g_list <- derivs_for_se$g_list
       rho$V <- rho$n/(rho$n - NCOL(derivs_for_se$V)) * derivs_for_se$V  ## correct for degrees of freedom
       rho$H.inv <- tryCatch(chol2inv(chol(derivs_for_se$H)))
+      rho$varGamma <- rho$H.inv %*% rho$V %*% rho$H.inv ## inverse godambe
+      rho$claic <- 2 * rho$objective + 2 * sum(diag(rho$V %*% rho$H.inv))
+      rho$clbic <- 2 * rho$objective + log(rho$n) * sum(diag(rho$V %*% rho$H.inv))
     }
-  # }
-  rho$varGamma <- rho$H.inv %*% rho$V %*% rho$H.inv ## inverse godambe
+  }
   rho$seGamma <- sqrt(diag(rho$varGamma))
   if(rho$control$trace != 0) cat("Done computing the standard errors!\n")
-  rho$claic <- 2 * rho$objective + 2 * sum(diag(rho$V %*% rho$H.inv))
-  rho$clbic <- 2 * rho$objective + log(rho$n) * sum(diag(rho$V %*% rho$H.inv))
   rho
 }
 #############################################################################
@@ -68,7 +80,7 @@ d_rect <- function(Uk, Ul, Lk, Ll, r,
   UL <- d_biv_fun(Uk, Ll, r)
   LU <- d_biv_fun(Lk, Ul, r)
   LL <- d_biv_fun(Lk, Ll, r)
-  - ((UU - UL) * dUkmat  - (LU - LL) * dLkmat)
+  ((UU - UL) * dUkmat  - (LU - LL) * dLkmat)
 }
 # #' @title Derivative of rectangle probability wrt standard deviation parameters
 # #' @description This function computes the derivative of the rectangle probability wrt standard deviation parameters
@@ -106,14 +118,14 @@ d_psi_rect_kl <- function(k, l, indkl, rho, r, sd_k, sd_l) {
   XmatLl <- rho$XL[[l]] %*% Cl
   - as.matrix(d_rect(Uk = rho$U[indkl, k], Ul = rho$U[indkl, l],
                      Lk = rho$L[indkl, k], Ll = rho$L[indkl, l],
-                     r = r, dUkmat =  XmatUk[indkl, ]/sd_k,
-                     dLkmat = XmatLk[indkl, ]/sd_k,
+                     r = r, dUkmat =  (XmatUk)[indkl, ]/sd_k,
+                     dLkmat = (XmatLk)[indkl, ]/sd_k,
                      d_biv_fun = rho$link$deriv.fun$dF2dx)
               +
                 d_rect(Uk = rho$U[indkl, l], Ul = rho$U[indkl, k],
                        Lk = rho$L[indkl, l], Ll = rho$L[indkl, k], r = r,
-                       dUkmat =  XmatUl[indkl, ]/sd_l,
-                       dLkmat = XmatLl[indkl, ]/sd_l,
+                       dUkmat =  (XmatUl)[indkl, ]/sd_l,
+                       dLkmat = (XmatLl)[indkl, ]/sd_l,
                        d_biv_fun = rho$link$deriv.fun$dF2dx))
 }
 
@@ -248,6 +260,7 @@ derivs_ana <- function(rho){
     rho$XU[[j]] <- cbind(BU, -XcatU)
     rho$XL[[j]] <- cbind(BL, -XcatL)
   }
+
   psi <- rho$C %*% c(theta, rho$beta)
   ##
   npar.err <-  attr(rho$error.structure, "npar")
@@ -398,12 +411,10 @@ derivs_ana <- function(rho){
 
   ## Variability matrix
   V <- crossprod(Vi)
-  ## Hessian matrix
+  ## Hessian matrix - expected Fisher information matrix.
   H <- Reduce("+", lapply(g_list, crossprod))
   list(g_list = g_list, V = V, H = H)
-}
-## TODO: so far standard errors are for the transformed parameters.
-## Jacobian is needed when we compute the standard errors on the paramteres entering optimizer.
+}#
 ## This will help general purpose optimizers
 #### make Jacobian
 # make_jacobian <- function(rho) {
@@ -482,52 +493,55 @@ derivs_ana <- function(rho){
 #       c(0, cumsum(c(1 ,exp(gamma_j))))[i+2]
 # }
 #
-# make_jac_matrix <- function(rho) {
-#   par <- rho$optpar
-#   first.ind.theta <- sapply(rho$ind.thresholds, "[", 1)
-#   transf_thresholds_jac <- switch(rho$threshold,
-#                                   fix2firstlast = transf_thresholds_fix2_firstlast_jac,
-#                                   fix2first = transf_thresholds_fix2_first_jac)
-#
-#   gamma <- par[seq_len(rho$npar.thetas)]
-#    if (rho$threshold == "flexible") {
-#      jac <- lapply((seq_len(rho$ndim))[which(rho$npar.theta.opt > 0)], function(j){ #rho$npar.theta
-#        emat <- diag(rho$ntheta[j])
-#        if (ncol(emat) >= 2) {
-#          emat[,1] <- 1
-#          for (k in 2:ncol(emat))
-#            emat[(k:nrow(emat)), k] <-
-#              exp(gamma[(first.ind.theta[j]) + seq_len(rho$ntheta[j]-1)])[k - 1]
-#        }
-#        emat
-#        })
-#    } else {
-#      if (rho$threshold == "fix1first") {
-#        jac <- lapply((seq_len(rho$ndim))[which(rho$npar.theta.opt > 0)], function(j){ #rho$npar.theta
-#          emat <- diag(rho$ntheta[j])
-#          if (ncol(emat) >= 2) {
-#            emat[,1] <- 1
-#            for (k in 2:ncol(emat))
-#              emat[(k:nrow(emat)), k] <-
-#                exp(gamma[(first.ind.theta[j]) + seq_len(rho$npar.theta.opt[j])-1])[k - 1] #rho$npar.theta
-#          }
-#          emat[-1,-1]
-#        })
-#      } else {
-#        jac <- lapply((seq_len(rho$ndim))[which(rho$npar.theta.opt > 0)], function(j){ #rho$npar.theta
-#          gamma_j <- gamma[first.ind.theta[j] + seq_len(rho$npar.theta.opt[j]) - 1] #rho$npar.theta
-#          t(sapply(1:length(gamma_j),
-#                   function(i) grad(function(x) transf_thresholds_jac(rho, j, x, i), x=gamma_j)))
-#        })
-#      }
-#    }
-#   ## Jacobian for BETAS: no transform
-#   jac[sum(rho$npar.theta.opt > 0) + seq_len(rho$npar.betas)] <- 1
-#   ## Jacobian for ERROR STRUCTURE
-#   parsigma <- par[rho$npar.thetas + rho$npar.betas + seq_len(attr(rho$error.structure, "npar"))]
-#   corr.jac <- corr_jac(rho$error.structure, parsigma)
-#   jac[sum(rho$npar.theta.opt > 0) + rho$npar.betas + seq_along(corr.jac)] <- corr.jac #rho$npar.theta
-#   ## make Jacobian matrix
-#   J <- as.matrix(bdiag(jac))
-#   return(J)
-# }
+make_jac_matrix <- function(rho) {
+  par <- rho$optpar
+  parthetabeta <- unlist(par[seq_len(rho$npar.thetas + rho$npar.betas)])
+  jac <- list(numDeriv::jacobian(function(x) transf_psi(x, rho), x = parthetabeta))
+  # first.ind.theta <- sapply(rho$ind.thresholds, "[", 1)
+  # transf_thresholds_jac <- switch(rho$threshold,
+  #                                 fix2firstlast = transf_thresholds_fix2_firstlast_jac,
+  #                                 fix2first = transf_thresholds_fix2_first_jac)
+  #
+  # gamma <- par[seq_len(rho$npar.thetas)]
+  # if (rho$threshold == "flexible") {
+  #   jac <- lapply((seq_len(rho$ndim))[which(rho$npar.theta.opt > 0)], function(j){ #rho$npar.theta
+  #     emat <- diag(rho$ntheta[j])
+  #     if (ncol(emat) >= 2) {
+  #       emat[,1] <- 1
+  #       for (k in 2:ncol(emat))
+  #         emat[(k:nrow(emat)), k] <-
+  #           exp(gamma[(first.ind.theta[j]) + seq_len(rho$ntheta[j]-1)])[k - 1]
+  #     }
+  #     emat
+  #   })
+  # } else {
+  #   if (rho$threshold == "fix1first") {
+  #     jac <- lapply((seq_len(rho$ndim))[which(rho$npar.theta.opt > 0)], function(j){ #rho$npar.theta
+  #       emat <- diag(rho$ntheta[j])
+  #       if (ncol(emat) >= 2) {
+  #         emat[,1] <- 1
+  #         for (k in 2:ncol(emat))
+  #           emat[(k:nrow(emat)), k] <-
+  #             exp(gamma[(first.ind.theta[j]) + seq_len(rho$npar.theta.opt[j])-1])[k - 1] #rho$npar.theta
+  #       }
+  #       emat[-1,-1]
+  #     })
+  #   } else {
+  #     jac <- lapply((seq_len(rho$ndim))[which(rho$npar.theta.opt > 0)], function(j){ #rho$npar.theta
+  #       gamma_j <- gamma[first.ind.theta[j] + seq_len(rho$npar.theta.opt[j]) - 1] #rho$npar.theta
+  #       t(sapply(1:length(gamma_j),
+  #                function(i) grad(function(x) transf_thresholds_jac(rho, j, x, i), x=gamma_j)))
+  #     })
+  #   }
+  # }
+  ## Jacobian for BETAS: no transform
+  # jac[sum(rho$npar.theta.opt > 0) + seq_len(rho$npar.betas)] <- 1/rho$fi_scale
+  ## Jacobian for ERROR STRUCTURE
+  parsigma <- par[rho$npar.thetas + rho$npar.betas + seq_len(attr(rho$error.structure, "npar"))]
+  corr.jac <- corr_jac(rho$error.structure, parsigma)
+  # jac[sum(rho$npar.theta.opt > 0) + rho$npar.betas + seq_along(corr.jac)] <- corr.jac #rho$npar.theta
+  jac[2] <-  corr.jac
+  ## make Jacobian matrix
+  J <- as.matrix(bdiag(jac))
+  return(J)
+}
