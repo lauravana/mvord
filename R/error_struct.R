@@ -882,16 +882,8 @@ corr_jac.cor_ar1 <- function(eobj, tpar){
 corr_jac.cor_equi<- function(eobj, tpar){
   list(diag(attr(eobj, "npar")))
 }
-#' corr_jac.cor_rel_var <- function(eobj, tpar){
-#'   ndim <- attr(eobj, "ndim")
-#'   npar.cor <- attr(eobj, "npar.cor")
-#'   npar.sd <- attr(eobj, "npar.sd")
-#'   l <- list(sapply(1:npar.cor, function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
-#'                                                 x=tpar[seq_len(npar.cor)])))
-#'   l[1 + seq_len(npar.sd)] <- exp(tpar[npar.cor + seq_len(npar.sd)])
-#'   l
-#' }
 
+#' @keywords internal
 corr_jac_num_fct <- function(ndim, nu, i){
   # i is the ith correlation parameter
   L <- diag(ndim)
