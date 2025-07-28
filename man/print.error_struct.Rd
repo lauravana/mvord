@@ -2,7 +2,7 @@
 % Please edit documentation in R/error_struct.R
 \name{print.error_struct}
 \alias{print.error_struct}
-\title{Print Method for class error_struc.}
+\title{Print Method for class error_struct.}
 \usage{
 \method{print}{error_struct}(x, ...)
 }

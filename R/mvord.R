@@ -1076,7 +1076,7 @@ fitted.mvord <- function(object, ...) predict(object, ...)
 #' @method logLik mvord
 #' @export
 logLik.mvord <- function(object, ...) structure(-object$rho$objective,
-                                                df = sum(diag(object$rho$V %*% object$rho$H.inv)), class = "logLik")
+                                                df = object$rho$df, class = "logLik")
 
 #' @title Constraints on the Regression Coefficients of Multivariate Ordinal Regression Models.
 #' @description

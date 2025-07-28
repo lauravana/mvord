@@ -1,0 +1,61 @@
+---
+title: "Scaling of variables in **mvord**"
+author: "Laura Vana"
+date: "2024-09-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Scaling in the case of no constraints
+
+For the general purpose optimizers, it is desirable to standardize the variables
+to have mean zero and variance one before starting the optimization. 
+In the **mvord** model this will impact the $\beta$ and $\theta$ parameters.
+
+Assume the model for two response variables, with one covariate and no standard deviation parameter (i.e., correlation structure). Assume $r_{ik} \in \{1,\ldots,C_k\}$ and $r_{il} \in \{1,\ldots,C_l\}$.
+$$
+P(y_{ik} = r_{ik}, y_{il} = r_{il}) 
+$$
+Assume $r_{ik} \in \{1,\ldots,C_k\}$ and $r_{il} \in \{1,\ldots,C_l\}$.
+This implies on latent scale
+$$
+\theta^k_{r_{ik} - 1} \leq x_{ik}\beta_k + \epsilon^*_{ik} < \theta^k_{r_{ik}}
+$$
+and similarly, 
+$$
+\theta^l_{r_{il} - 1} \leq x_{il}\beta_l + \epsilon^*_{il} < \theta^l_{r_{il}}
+$$
+For response $k$, standardizing $x_k$ by $m_k$, its sample mean, and $s_k$, its standard deviation we get $\tilde x_k=(x_k-m_k)/s_k$ and will lead to:
+$$
+\tilde\theta^k_{r_{ik} - 1} \leq \frac{x_{ik}-m_k}{s_k}\tilde\beta_k + \tilde\epsilon^*_{ik} < \tilde\theta^k_{r_{ik}}
+$$
+where $\beta=\tilde\beta_k/s_k$,  $\theta^k_{r_{ik} - 1}=\tilde\theta^k_{r_{ik} - 1}-m_k\tilde\beta_k/s_k$ and  
+$\theta^k_{r_{ik}}=\tilde\theta^k_{r_{ik}}-m_k\tilde\beta_k/s_k$
+
+## Standardizing with constraints
+Having constraints on both $\beta$ and $\theta$ complicates the
+transformation.
+
+We can write the linear predictors as: 
+$$
+U_{ik} = z^{U\top}_{ik}H_{(k)}\psi, \qquad L_{ik} = z^{L\top}_{ik}H_{(k)}\psi,
+$$
+where $\psi = (\theta^\top, -\beta^\top)^\top$,  $H_{(k)}$ are suitable constraint matrices. Here, 
+$$
+Z_k^U= (D^U_k | \text{diag}(X_ke_1)D_k^U | \ldots| \text{diag}(X_ke_P)D_k^U
+$$
+$$
+Z_k^L= (D^L_k | \text{diag}(X_ke_1)D_k^L | \ldots| \text{diag}(X_ke_P)D_k^L
+$$
+where the matrix $D^U_k$ contains the rows $(d_{i,k,2},d_{i,k,3},\ldots,d_{i,k,C_k})$ where $d_{i,k,r}$ is one if $r_{ik}=r$ and zero otherwise, while the matrix $D^L_k$ contains the rows $(d_{i,k,1},d_{i,k,2},\ldots,d_{i,k,C_k-1})$ . 
+
+
+Standardization implies $(Z^U_k - \boldsymbol 1 \mu_k)S_k^{-1}$, where  $\mu_k=(0,\ldots,m_k)$ and the diagonal of $S_k$ is given by $(1,\ldots,s_k)$. 
+
+So we have:
+$$
+\tilde U_{ik} = \tilde z^{U\top}_{ik}H_{(k)}\tilde\psi, \qquad \tilde L_{ik} = \tilde z^{L\top}_{ik}H_{(k)}\tilde\psi,
+$$

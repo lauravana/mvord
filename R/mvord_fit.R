@@ -317,9 +317,13 @@ mvord.fit <- function(rho){
   ##############################################
   res <- mvord_finalize(rho)
   if (rho$se) {
-    rownames(rho$varGamma) <- colnames(rho$varGamma) <- c(names(unlist(res$theta))[is.na(unlist(rho$threshold.values))][!duplicated(unlist(rho$ind.thresholds))],                                                        names(res$beta),                                                     attr(res$error.struct, "parnames"))
+    rownames(rho$varGamma) <- colnames(rho$varGamma) <-
+      c(names(unlist(res$theta))[is.na(unlist(rho$threshold.values))][!duplicated(unlist(rho$ind.thresholds))],
+        names(res$beta),
+        attr(res$error.struct, "parnames"))
   }
   ## clean up
+  # if (TRUE) {
   rho$XcatU <- NULL
   rho$XcatL <- NULL
   rho$transf_thresholds <- NULL
@@ -356,6 +360,7 @@ mvord.fit <- function(rho){
   rho$link$F_biv_rect <- NULL
   rho$link$F_biv <- NULL
   ##
+  #}
   res$rho <- rho
   res$rho$formula <- rho$formula.input
   res$rho$formula.input <- NULL

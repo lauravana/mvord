@@ -24,19 +24,26 @@ PL_se <- function(rho){
   # } else {
   par <- rho$optpar
   if (rho$evalOnly)   {
-    rho$H.inv <- numeric(0)
-    rho$V <- numeric(0)
+    rho$H.inv <- matrix(nrow = 0L, ncol = 0L)
+    rho$V <- matrix(nrow = 0L, ncol = 0L)
+    rho$varGamma <- matrix(nrow = 0L, ncol = 0L)
+    rho$df <- 0L
   } else {
     if ((rho$ndim) == 2 && rho$n <= 1000) {
       if(rho$control$trace != 0) cat("Computing hessian matrix numerically ... \n")
       J <- make_jac_matrix(rho)
-      Ht <-  hessian(function(par) PLfun(par, rho), par,
-                     method = "Richardson") # Fisher matrix H(Gamma transf)
-      Ht.inv <- tryCatch(chol2inv(chol(Ht)))
-      rho$H.inv <- J %*% tcrossprod(Ht.inv, J)
+      if (length(par) > 0) {
+        Ht <-  hessian(function(par) PLfun(par, rho), par,
+                       method = "Richardson") # Fisher matrix H(Gamma transf)
+        Ht.inv <- tryCatch(chol2inv(chol(Ht)))
+        rho$H.inv <- J %*% tcrossprod(Ht.inv, J)
+      } else {
+        rho$H.inv <- matrix(nrow = 0L, ncol = 0L)
+      }
       rho$varGamma <- rho$H.inv ## inverse observed fisher information matrix
       rho$claic <- 2 * rho$objective + 2 * ncol(rho$H.inv)
       rho$clbic <- 2 * rho$objective + log(rho$n) * ncol(rho$H.inv)
+      rho$df <- ncol(rho$H.inv)
     } else {
       if(rho$control$trace != 0) cat("Computing variability and hessian matrix analytically ... \n")
       derivs_for_se <- derivs_ana(rho)
@@ -46,6 +53,7 @@ PL_se <- function(rho){
       rho$varGamma <- rho$H.inv %*% rho$V %*% rho$H.inv ## inverse godambe
       rho$claic <- 2 * rho$objective + 2 * sum(diag(rho$V %*% rho$H.inv))
       rho$clbic <- 2 * rho$objective + log(rho$n) * sum(diag(rho$V %*% rho$H.inv))
+      rho$df <-  sum(diag(rho$V %*% rho$H.inv))
     }
   }
   rho$seGamma <- sqrt(diag(rho$varGamma))
@@ -496,7 +504,10 @@ derivs_ana <- function(rho){
 make_jac_matrix <- function(rho) {
   par <- rho$optpar
   parthetabeta <- unlist(par[seq_len(rho$npar.thetas + rho$npar.betas)])
-  jac <- list(numDeriv::jacobian(function(x) transf_psi(x, rho), x = parthetabeta))
+  jac <- list()
+  if (length(parthetabeta)>0) {
+    jac <- list(numDeriv::jacobian(function(x) transf_psi(x, rho), x = parthetabeta))
+  }
   # first.ind.theta <- sapply(rho$ind.thresholds, "[", 1)
   # transf_thresholds_jac <- switch(rho$threshold,
   #                                 fix2firstlast = transf_thresholds_fix2_firstlast_jac,
@@ -538,9 +549,11 @@ make_jac_matrix <- function(rho) {
   # jac[sum(rho$npar.theta.opt > 0) + seq_len(rho$npar.betas)] <- 1/rho$fi_scale
   ## Jacobian for ERROR STRUCTURE
   parsigma <- par[rho$npar.thetas + rho$npar.betas + seq_len(attr(rho$error.structure, "npar"))]
-  corr.jac <- corr_jac(rho$error.structure, parsigma)
-  # jac[sum(rho$npar.theta.opt > 0) + rho$npar.betas + seq_along(corr.jac)] <- corr.jac #rho$npar.theta
-  jac[2] <-  corr.jac
+  if (length(parsigma) > 0) {
+    corr.jac <- corr_jac(rho$error.structure, parsigma)
+    # jac[sum(rho$npar.theta.opt > 0) + rho$npar.betas + seq_along(corr.jac)] <- corr.jac #rho$npar.theta
+    jac <-  c(jac, corr.jac)
+  }
   ## make Jacobian matrix
   J <- as.matrix(bdiag(jac))
   return(J)

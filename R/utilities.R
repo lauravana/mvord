@@ -879,11 +879,19 @@ transf_psi <- function(parthetabeta, rho) {
     correction <- lapply(rho$inds.cat, function(k) br[k])
   } else {
     correction <- rep.int(list(0), rho$ndim)
-    par_theta <- rho$transf_thresholds(rho$optpar[seq_len(rho$npar.thetas)], rho, 0)
+    par_theta <- rho$transf_thresholds(par_theta[seq_len(rho$npar.thetas)], rho, 0)
     thetatilde <- lapply(seq_len(rho$ndim), function(j) par_theta[[j]])
   }
   ## Thresholds
-  theta <- lapply(seq_len(rho$ndim), function(j) thetatilde[[j]] + correction[[j]])
+  theta_all <- lapply(seq_len(rho$ndim),
+                  function(j) thetatilde[[j]] + correction[[j]])
+  theta <- lapply(seq_len(rho$ndim), function(j)
+    switch(rho$threshold,
+           flexible      = theta_all[[j]],
+           fix1first     = theta_all[[j]][-1],
+           fix2first     = theta_all[[j]][-c(1,2)],
+           fix2firstlast = theta_all[[j]][seq_len(rho$ntheta[j] - 1)[-1]]))
+  theta <- unlist(theta[!duplicated(rho$threshold.constraints)])
   ## Regression coefficients
   beta <- par_beta/rho$fi_scale
   unlist(c(theta, beta))

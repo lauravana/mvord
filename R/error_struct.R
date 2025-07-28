@@ -851,7 +851,9 @@ error_structure.cor_ar1 <- function(eobj, type, ...){
 ##########################################
 ## IF numeric SE should be computed ... ##
 ##########################################
+#' @keywords internal
 corr_jac <- function(eobj, tpar, ...) UseMethod("corr_jac")
+#' @keywords internal
 corr_jac.cor_general <- function(eobj, tpar){
   nlev <- NCOL(attr(eobj, "covariate"))
   ndim <- attr(eobj, "ndim")
@@ -860,6 +862,7 @@ corr_jac.cor_general <- function(eobj, tpar){
     t(sapply(seq_len(npar.cor), function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
                                           x=tpar[(l - 1) * npar.cor + seq_len(npar.cor)]))))
 }
+#' @keywords internal
 corr_jac.cov_general <- function(eobj, tpar){
   nlev <- NCOL(attr(eobj, "covariate"))
   ndim <- attr(eobj, "ndim")
@@ -871,22 +874,23 @@ corr_jac.cov_general <- function(eobj, tpar){
     exp(tpar[npar.cor * nlev + seq_len(ndim * nlev)])
   l
 }
-
+#' @keywords internal
 corr_jac.cor_ar1 <- function(eobj, tpar){
   list(diag(attr(eobj, "npar")))
 }
+#' @keywords internal
 corr_jac.cor_equi<- function(eobj, tpar){
   list(diag(attr(eobj, "npar")))
 }
-corr_jac.cor_rel_var <- function(eobj, tpar){
-  ndim <- attr(eobj, "ndim")
-  npar.cor <- attr(eobj, "npar.cor")
-  npar.sd <- attr(eobj, "npar.sd")
-  l <- list(sapply(1:npar.cor, function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
-                                                x=tpar[seq_len(npar.cor)])))
-  l[1 + seq_len(npar.sd)] <- exp(tpar[npar.cor + seq_len(npar.sd)])
-  l
-}
+#' corr_jac.cor_rel_var <- function(eobj, tpar){
+#'   ndim <- attr(eobj, "ndim")
+#'   npar.cor <- attr(eobj, "npar.cor")
+#'   npar.sd <- attr(eobj, "npar.sd")
+#'   l <- list(sapply(1:npar.cor, function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
+#'                                                 x=tpar[seq_len(npar.cor)])))
+#'   l[1 + seq_len(npar.sd)] <- exp(tpar[npar.cor + seq_len(npar.sd)])
+#'   l
+#' }
 
 corr_jac_num_fct <- function(ndim, nu, i){
   # i is the ith correlation parameter
@@ -906,7 +910,7 @@ z2r <- function (z) {
   ifelse(z > 354, 1, (exp(2 * z) - 1)/(1 + exp(2 * z)))
 }
 
-#' @title Print Method for class error_struc.
+#' @title Print Method for class error_struct.
 #' @description Prints error structure of class \code{\link{error_struct}}.
 #' @param x object of class \code{\link{error_struct}}
 #' @param ... further arguments passed to or from other methods.
