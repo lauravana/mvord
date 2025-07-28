@@ -851,55 +851,55 @@ error_structure.cor_ar1 <- function(eobj, type, ...){
 ##########################################
 ## IF numeric SE should be computed ... ##
 ##########################################
-corr_jac <- function(eobj, tpar, ...) UseMethod("corr_jac")
-corr_jac.cor_general <- function(eobj, tpar){
-  nlev <- NCOL(attr(eobj, "covariate"))
-  ndim <- attr(eobj, "ndim")
-  npar.cor <- ndim * (ndim - 1)/2
-  lapply(seq_len(nlev), function(l)
-    t(sapply(seq_len(npar.cor), function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
-                                          x=tpar[(l - 1) * npar.cor + seq_len(npar.cor)]))))
-}
-corr_jac.cov_general <- function(eobj, tpar){
-  nlev <- NCOL(attr(eobj, "covariate"))
-  ndim <- attr(eobj, "ndim")
-  npar.cor <- ndim * (ndim - 1)/2
-  l <- lapply(1:nlev, function(l)
-    t(sapply(1:npar.cor, function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
-                                          x=tpar[(l - 1) * npar.cor + seq_len(npar.cor)]))))
-  l[length(l) + seq_len(nlev * ndim)] <-
-    exp(tpar[npar.cor * nlev + seq_len(ndim * nlev)])
-  l
-}
-
-corr_jac.cor_ar1 <- function(eobj, tpar){
-  list(diag(attr(eobj, "npar")))
-}
-corr_jac.cor_equi<- function(eobj, tpar){
-  list(diag(attr(eobj, "npar")))
-}
-corr_jac.cor_rel_var <- function(eobj, tpar){
-  ndim <- attr(eobj, "ndim")
-  npar.cor <- attr(eobj, "npar.cor")
-  npar.sd <- attr(eobj, "npar.sd")
-  l <- list(sapply(1:npar.cor, function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
-                                                x=tpar[seq_len(npar.cor)])))
-  l[1 + seq_len(npar.sd)] <- exp(tpar[npar.cor + seq_len(npar.sd)])
-  l
-}
-
-corr_jac_num_fct <- function(ndim, nu, i){
-  # i is the ith correlation parameter
-  L <- diag(ndim)
-  angles <- pi * exp(nu)/(1 + exp(nu))
-  L[lower.tri(L)] <- cos(angles)
-  S <-  matrix(0, nrow = ndim - 1, ncol = ndim - 1)
-  S[lower.tri(S,diag=T)] <- sin(angles)
-  S <- apply(cbind(1, rbind(0, S)), 1, cumprod)
-  L <- L * t(S)
-  sigma <- tcrossprod(L)
-  sigma[lower.tri(sigma)][i]
-}
+# corr_jac <- function(eobj, tpar, ...) UseMethod("corr_jac")
+# corr_jac.cor_general <- function(eobj, tpar){
+#   nlev <- NCOL(attr(eobj, "covariate"))
+#   ndim <- attr(eobj, "ndim")
+#   npar.cor <- ndim * (ndim - 1)/2
+#   lapply(seq_len(nlev), function(l)
+#     t(sapply(seq_len(npar.cor), function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
+#                                           x=tpar[(l - 1) * npar.cor + seq_len(npar.cor)]))))
+# }
+# corr_jac.cov_general <- function(eobj, tpar){
+#   nlev <- NCOL(attr(eobj, "covariate"))
+#   ndim <- attr(eobj, "ndim")
+#   npar.cor <- ndim * (ndim - 1)/2
+#   l <- lapply(1:nlev, function(l)
+#     t(sapply(1:npar.cor, function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
+#                                           x=tpar[(l - 1) * npar.cor + seq_len(npar.cor)]))))
+#   l[length(l) + seq_len(nlev * ndim)] <-
+#     exp(tpar[npar.cor * nlev + seq_len(ndim * nlev)])
+#   l
+# }
+#
+# corr_jac.cor_ar1 <- function(eobj, tpar){
+#   list(diag(attr(eobj, "npar")))
+# }
+# corr_jac.cor_equi<- function(eobj, tpar){
+#   list(diag(attr(eobj, "npar")))
+# }
+# corr_jac.cor_rel_var <- function(eobj, tpar){
+#   ndim <- attr(eobj, "ndim")
+#   npar.cor <- attr(eobj, "npar.cor")
+#   npar.sd <- attr(eobj, "npar.sd")
+#   l <- list(sapply(1:npar.cor, function(i) grad(function(x) corr_jac_num_fct(ndim, x, i),
+#                                                 x=tpar[seq_len(npar.cor)])))
+#   l[1 + seq_len(npar.sd)] <- exp(tpar[npar.cor + seq_len(npar.sd)])
+#   l
+# }
+#
+# corr_jac_num_fct <- function(ndim, nu, i){
+#   # i is the ith correlation parameter
+#   L <- diag(ndim)
+#   angles <- pi * exp(nu)/(1 + exp(nu))
+#   L[lower.tri(L)] <- cos(angles)
+#   S <-  matrix(0, nrow = ndim - 1, ncol = ndim - 1)
+#   S[lower.tri(S,diag=T)] <- sin(angles)
+#   S <- apply(cbind(1, rbind(0, S)), 1, cumprod)
+#   L <- L * t(S)
+#   sigma <- tcrossprod(L)
+#   sigma[lower.tri(sigma)][i]
+# }
 
 
 z2r <- function (z) {

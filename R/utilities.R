@@ -424,7 +424,6 @@ transf_thresholds_flexible <- function(gamma, rho, betatilde = NULL){
     } else rho$threshold.values[[j]]
   )
 }
-
 ##############################################################################
 get_ind_thresholds <- function(threshold.constraints,rho){
   cs <- c(0, cumsum(rho$npar.theta.opt)[-length(rho$npar.theta.opt)])
@@ -865,27 +864,3 @@ polycor <- function(x, y = NULL){
   res <- mvord(formula_mvord, dat_mvord)
   res$error.struct
 }
-
-transf_psi <- function(parthetabeta, rho) {
-  par_beta <- parthetabeta[rho$npar.thetas + seq_len(rho$npar.betas)]
-  par_theta <- parthetabeta[seq_len(rho$npar.thetas)]
-  if(rho$p > 0){
-    betatilde <- rho$constraints_mat %*% par_beta
-    par_theta <- rho$transf_thresholds(par_theta, rho, betatilde)
-    thetatilde <- lapply(seq_len(rho$ndim), function(j)
-      par_theta[[j]] + rho$thold_correction[[j]](betatilde, k = j, rho = rho))
-    betatildemu <-  betatilde * rho$mat_center_scale
-    br <- drop(crossprod(rho$contr_theta, betatildemu[,1]))
-    correction <- lapply(rho$inds.cat, function(k) br[k])
-  } else {
-    correction <- rep.int(list(0), rho$ndim)
-    par_theta <- rho$transf_thresholds(rho$optpar[seq_len(rho$npar.thetas)], rho, 0)
-    thetatilde <- lapply(seq_len(rho$ndim), function(j) par_theta[[j]])
-  }
-  ## Thresholds
-  theta <- lapply(seq_len(rho$ndim), function(j) thetatilde[[j]] + correction[[j]])
-  ## Regression coefficients
-  beta <- par_beta/rho$fi_scale
-  unlist(c(theta, beta))
-}
-
